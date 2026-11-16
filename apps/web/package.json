@@ -1,0 +1,40 @@
+{
+	"name": "@dsh-agent/web",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev --port 3000",
+		"generate-routes": "tsr generate",
+		"build": "vite build",
+		"preview": "vite preview",
+		"deploy": "pnpm run build && wrangler deploy",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@dsh-agent/contract": "workspace:*",
+		"@tailwindcss/vite": "^4.1.18",
+		"@tanstack/react-query": "^5.103.2",
+		"@tanstack/react-router": "latest",
+		"@tanstack/react-start": "latest",
+		"class-variance-authority": "^0.7.1",
+		"clsx": "^2.1.1",
+		"lucide-react": "^0.577.0",
+		"radix-ui": "^1.6.7",
+		"react": "^19.2.0",
+		"react-dom": "^19.2.0",
+		"tailwind-merge": "^3.0.2",
+		"tailwindcss": "^4.1.18"
+	},
+	"devDependencies": {
+		"@cloudflare/vite-plugin": "^1.60.1",
+		"@cloudflare/workers-types": "^5.20261007.1",
+		"@tanstack/router-cli": "^1.132.0",
+		"@types/node": "^22.10.2",
+		"@types/react": "^19.2.0",
+		"@types/react-dom": "^19.2.0",
+		"@vitejs/plugin-react": "^6.0.1",
+		"typescript": "^6.0.2",
+		"vite": "^8.0.0",
+		"wrangler": "^4.141.0"
+	}
+}

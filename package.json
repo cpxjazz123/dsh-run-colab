@@ -1,0 +1,10 @@
+{
+	"name": "dsh-agent",
+	"private": true,
+	"packageManager": "pnpm@11.22.0",
+	"scripts": {
+		"dev": "pnpm --filter @dsh-agent/web dev",
+		"build": "pnpm -r build",
+		"typecheck": "pnpm -r typecheck"
+	}
+}

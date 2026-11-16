@@ -1,0 +1,49 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "dsh-agent-bridge",
+	"workers_dev": true,
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-02",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true,
+		"traces": { "enabled": true }
+	},
+	"vars": {
+		// Set this to the public origin of the deployed Worker so the DSH
+		// Web UI and generated image links use the same host.
+		"DSH_PUBLIC_URL": ""
+	},
+	"secrets": {
+		"required": [
+			"DSH_BRIDGE_TOKEN",
+			"DEEPSEEK_API_KEY",
+			"DEEPSEEK_BASE_URL",
+			"DEEPSEEK_MODEL",
+			"COLAB_OAUTH_TOKEN",
+			"GOOGLE_CLOUD_PROJECT"
+		]
+	},
+	"containers": [
+		{
+			"class_name": "DshBridgeContainer",
+			"image": "./Dockerfile",
+			"instance_type": "standard-1",
+			"max_instances": 2
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "DSH_BRIDGE",
+				"class_name": "DshBridgeContainer"
+			}
+		]
+	},
+	"exports": {
+		"DshBridgeContainer": {
+			"type": "durable-object",
+			"storage": "sqlite"
+		}
+	}
+}

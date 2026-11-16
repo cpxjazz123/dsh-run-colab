@@ -1,0 +1,14 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "dsh-agent-web",
+	"workers_dev": true,
+	"compatibility_date": "2026-09-25",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": "@tanstack/react-start/server-entry",
+	"services": [
+		{
+			"binding": "DSH_BRIDGE",
+			"service": "dsh-agent-bridge"
+		}
+	]
+}
