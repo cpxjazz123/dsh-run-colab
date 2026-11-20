@@ -1033,9 +1033,27 @@ function personaPluginSource() {
 const PROFILE = '/content/dsh-home/profiles/web/cordis.patch.yml'
 const PERSONA_FILE = '/content/dsh-home/dsh-persona.txt'
 
-// Read on every prompt assembly so a panel save lands on the next turn
-// without restarting DSH. Falls back to the text baked in at start.
+// The bridge is reachable through the reverse tunnel, so a panel save lands
+// within a couple of seconds. The file and the start-time text are fallbacks.
+let cachedPersona = ''
+let personaLoaded = false
+
+async function refreshPersona(url, token) {
+  if (!url) return
+  try {
+    const response = await fetch(url, {
+      headers: token ? { authorization: 'Bearer ' + token } : {},
+    })
+    if (!response.ok) return
+    cachedPersona = await response.text()
+    personaLoaded = true
+  } catch {
+    // Keep the last known persona.
+  }
+}
+
 function personaText(fallback) {
+  if (personaLoaded) return cachedPersona
   try {
     return readFileSync(PERSONA_FILE, 'utf8')
   } catch {
@@ -1127,6 +1145,11 @@ function send(res, status, body) {
 export const name = 'dsh-persona'
 export const inject = ['systemPrompt']
 export function apply(ctx, config) {
+  void refreshPersona(config.url, config.token)
+  const timer = setInterval(() => {
+    void refreshPersona(config.url, config.token)
+  }, 2000)
+  ctx.effect(() => () => clearInterval(timer), 'dsh.persona.refresh')
   ctx.effect(() =>
     ctx.systemPrompt.section({
       name: 'dsh:persona',
@@ -1177,6 +1200,8 @@ function startScript() {
       name: ${yamlJson(join(DSH_HOME, 'dsh-persona.mjs'))}
       config:
         text: ${yamlJson(personaSectionText())}
+        url: ${yamlJson(MCP_BRIDGE_URL ? `${MCP_BRIDGE_URL}/persona` : '')}
+        token: ${yamlJson(process.env.DSH_BRIDGE_TOKEN || '')}
 `
   const imageMcp = MCP_BRIDGE_URL && config.imageGeneration
     ? `- insert:
@@ -1690,6 +1715,20 @@ function send(res, status, body) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', `http://127.0.0.1:${BRIDGE_PORT}`)
   try {
+    if (req.method === 'GET' && url.pathname === '/persona') {
+      const expected = `Bearer ${process.env.DSH_BRIDGE_TOKEN || ''}`
+      const provided = req.headers.authorization || ''
+      const allowed =
+        !process.env.DSH_BRIDGE_TOKEN ||
+        (provided.length === expected.length &&
+          Buffer.from(provided).equals(Buffer.from(expected)))
+      if (!allowed) return send(res, 401, { error: { message: 'unauthorized' } })
+      res.writeHead(200, {
+        'content-type': 'text/plain; charset=utf-8',
+        'cache-control': 'no-store',
+      })
+      return res.end(personaSectionText())
+    }
     if (req.method === 'GET' && url.pathname === '/state') {
       return send(res, 200, await state())
     }
