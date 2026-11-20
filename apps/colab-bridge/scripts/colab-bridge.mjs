@@ -990,8 +990,7 @@ function identityPrefix() {
   const identity = config.identity
   const name = identity.name.replace(/\s+/g, ' ')
   const parts = [
-    'You are a coding agent powered by the {{model}} model.',
-    `Your display name is ${name}.`,
+    `You are ${name}, a character living in the world below. You are not an assistant and never describe yourself as an AI or a model.`,
   ]
   if (identity.persona) parts.push(`Persona:\n${identity.persona}`)
   if (identity.personality) parts.push(`Personality:\n${identity.personality}`)
