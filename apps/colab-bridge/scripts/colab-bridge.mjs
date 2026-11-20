@@ -98,6 +98,10 @@ const IMAGE_WORKER_SOURCE = readFileSync(
   new URL('./image-worker.py', import.meta.url),
   'utf8',
 )
+const MEMORY_MCP_SOURCE = readFileSync(
+  new URL('./memory-mcp.mjs', import.meta.url),
+  'utf8',
+)
 const IMAGE_WORKER_PORT = Number(process.env.DSH_IMAGE_WORKER_PORT || 8199)
 const IMAGE_WORKER_PATH = '/content/image-worker.py'
 const IMAGE_WORKER_PID = '/content/.image-worker.pid'
@@ -1024,14 +1028,50 @@ function personaSectionText() {
   if (world) parts.push(`World setting:\n${world}`)
   if (identity.instructions)
     parts.push(`Additional user configuration:\n${identity.instructions}`)
+  parts.push(
+    'Memory: when the user or the world reveals something worth keeping, call the memory tool remember with one short sentence. Call recall before answering questions about the user or about earlier events. Do not announce that you are saving or looking up memories.',
+  )
   return parts.join('\n\n')
 }
 
 function personaPluginSource() {
-  return `import { readFileSync } from 'node:fs'
+  return `import { readFileSync, statSync } from 'node:fs'
 
 const PROFILE = '/content/dsh-home/profiles/web/cordis.patch.yml'
 const PERSONA_FILE = '/content/dsh-home/dsh-persona.txt'
+const MEMORY_FILE = '/content/dsh-home/memories.json'
+
+let memoryCache = { mtime: 0, text: '' }
+
+function memoryText() {
+  try {
+    const mtime = statSync(MEMORY_FILE).mtimeMs
+    if (mtime === memoryCache.mtime) return memoryCache.text
+    const data = JSON.parse(readFileSync(MEMORY_FILE, 'utf8'))
+    const list = Array.isArray(data.memories) ? data.memories : []
+    const long = list
+      .filter((m) => m.kind !== 'short')
+      .sort((a, b) => (b.importance || 3) - (a.importance || 3) || (b.createdAt || 0) - (a.createdAt || 0))
+      .slice(0, 20)
+    const short = list
+      .filter((m) => m.kind === 'short')
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+      .slice(0, 10)
+    const lines = []
+    if (long.length) {
+      lines.push('## 长期记忆')
+      for (const m of long) lines.push('- ' + m.text)
+    }
+    if (short.length) {
+      lines.push('## 近期记忆')
+      for (const m of short) lines.push('- ' + m.text)
+    }
+    memoryCache = { mtime, text: lines.join('\n') }
+    return memoryCache.text
+  } catch {
+    return ''
+  }
+}
 
 // The bridge is reachable through the reverse tunnel, so a panel save lands
 // within a couple of seconds. The file and the start-time text are fallbacks.
@@ -1159,6 +1199,15 @@ export function apply(ctx, config) {
     }),
     'dsh.persona',
   )
+  ctx.effect(() =>
+    ctx.systemPrompt.section({
+      name: 'dsh:memory',
+      order: 10202,
+      text: () => memoryText(),
+      interpolate: false,
+    }),
+    'dsh.memory',
+  )
   if (typeof ctx.inject !== 'function') return
   ctx.inject(['webServer'], (scoped) => {
     const webServer = scoped.webServer
@@ -1225,6 +1274,23 @@ function startScript() {
           maxDelayMs: 30000
 `
     : ''
+  const memoryMcp = `- insert:
+    - id: mcp-memory
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: memory
+        transport: stdio
+        command: /content/node/bin/node
+        args:
+          - ${yamlJson(join(DSH_HOME, 'memory-mcp.mjs'))}
+        toolCallTimeoutMs: 20000
+        startupTimeoutMs: 20000
+        failOnStartupError: false
+        reconnect:
+          enabled: true
+          maxAttempts: 30
+          maxDelayMs: 30000
+`
   const patch = `- id: llm-pi-ai
   config:
     providers:
@@ -1244,7 +1310,7 @@ function startScript() {
   config:
     personaPrefix: ${yamlJson(identityPrefix())}
     personaSuffix: ${yamlJson(identitySuffix())}
-${personaPlugin}${imageMcp}- id: workspace-controller
+${personaPlugin}${memoryMcp}${imageMcp}- id: workspace-controller
   config:
     documentsDirectory: /root
 - id: working-directory
@@ -1254,6 +1320,7 @@ ${personaPlugin}${imageMcp}- id: workspace-controller
   const encoded = Buffer.from(envFile, 'utf8').toString('base64')
   const encodedPatch = Buffer.from(patch, 'utf8').toString('base64')
   const encodedMcp = Buffer.from(IMAGE_MCP_SOURCE, 'utf8').toString('base64')
+  const encodedMemoryMcp = Buffer.from(MEMORY_MCP_SOURCE, 'utf8').toString('base64')
   const encodedPersona = Buffer.from(
     personaPluginSource(),
     'utf8',
@@ -1278,6 +1345,7 @@ echo '${encoded}' | base64 -d > "$DSH_HOME/env.sh"
 chmod 600 "$DSH_HOME/env.sh"
 echo '${encodedPatch}' | base64 -d > "$DSH_HOME/minimax.patch.yml"
 echo '${encodedMcp}' | base64 -d > "$DSH_HOME/image-mcp.mjs"
+echo '${encodedMemoryMcp}' | base64 -d > "$DSH_HOME/memory-mcp.mjs"
 chmod 600 "$DSH_HOME/image-mcp.mjs"
 echo '${encodedPersona}' | base64 -d > "$DSH_HOME/dsh-persona.mjs"
 echo '${encodedPersonaText}' | base64 -d > "$DSH_HOME/dsh-persona.txt"

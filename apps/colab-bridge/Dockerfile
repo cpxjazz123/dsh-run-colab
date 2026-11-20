@@ -30,7 +30,7 @@ RUN python3 -m venv /opt/colab-cli \
     && ln -sf /opt/colab-cli/bin/colab /usr/local/bin/colab
 
 WORKDIR /app
-COPY scripts/colab-bridge.mjs scripts/image-mcp.mjs scripts/image-worker.py scripts/entrypoint.sh /app/
+COPY scripts/colab-bridge.mjs scripts/image-mcp.mjs scripts/memory-mcp.mjs scripts/image-worker.py scripts/entrypoint.sh /app/
 RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 7791 18080

@@ -54,6 +54,11 @@ Browser ──▶ dsh-agent-web      apps/web          panel UI, /api/dsh proxy
   session, exposed to the agent through MCP (`generate_image`). The panel's
   **会在聊天的时候生成图片** switch decides whether the agent gets that tool at
   all; it is persisted on the bridge and applied on the next start.
+- **Memory** — a stdio MCP server on the VM stores durable facts (`long`) and
+  adventure notes (`short`) in `/content/dsh-home/memories.json`. The persona
+  plugin renders the most important ones into every system prompt, so the
+  character recalls them in a fresh session. Tools: `remember`, `recall`,
+  `forget`; memories live as long as the Colab session, like the conversations.
 - **QQ Bot** — installs and reports the Tencent QQ Bot plugin state, including
   the login QR code.
 - **Public image URLs** — generated images are served at unguessable UUID
