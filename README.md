@@ -5,7 +5,7 @@ inside a Google Colab session and exposes a small web UI for starting,
 stopping, configuring, and opening the agent. Optional image generation and a
 QQ Bot plugin are included.
 
-![DSH Agent panel](jiemian.png)
+![DSH Agent panel](images/jiemian.png)
 
 ## Architecture
 
