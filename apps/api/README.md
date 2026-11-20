@@ -40,7 +40,7 @@ Status shows `local [connected]` when the two dev sessions are linked.
 
 ```bash
 pnpm --filter @dsh-agent/api exec wrangler secret put DSH_BRIDGE_TOKEN
-pnpm --filter @dsh-agent/api deploy
+pnpm --filter @dsh-agent/api exec wrangler deploy
 ```
 
 Deploy `dsh-colab-bridge` first: the service binding is resolved by name.
