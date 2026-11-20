@@ -4,136 +4,239 @@ import { useState } from 'react'
 type Chapter = {
 	no: string
 	title: string
-	when: string
+	place: string
 	tag: string
 	excerpt: string
 	body: string[]
 }
 
+const REALMS = [
+	{
+		name: '阿斯忒曼圣庭',
+		en: 'Astraman',
+		role: '天顶界',
+		line: '星轨谕言从这里落下。圣枢院、灵算阁、蕴真殿、通界司分掌神权、推演、源能与通界。',
+		accent: 'var(--is-gold)',
+	},
+	{
+		name: '外域虚境',
+		en: 'Ethereal Outer',
+		role: '圣庭外围',
+		line: '炼狱外溢的纯净能量在此沉淀成物质，通界司的船队从这里出海探索。',
+		accent: 'var(--is-violet)',
+	},
+	{
+		name: '派尔洛炼狱',
+		en: 'Pyro',
+		role: '炉心',
+		line: '炎核巨人的熔核平原，世界运转的核心能量从这一层烧出来。',
+		accent: 'var(--is-seal)',
+	},
+	{
+		name: '岩衡古境',
+		en: 'Ancient Realm',
+		role: '基准秩序',
+		line: '地魂守望者回收各层异变的混乱能量，用地脉震动向尘寰示警。',
+		accent: 'var(--is-faint)',
+	},
+	{
+		name: '露米妮娅之森',
+		en: 'Luminia',
+		role: '能量调和',
+		line: '晶灵把纯净炽能调成柔润灵能，再提纯出星枢源能，剩下的结晶就是灵能水晶。',
+		accent: 'var(--is-cyan)',
+	},
+	{
+		name: '安索弥斯',
+		en: 'Anthromith',
+		role: '尘寰界 · 当前落点',
+		line: '凡人的世界。观星殿读天兆，大公堡掌政权，灵械阁造器具，尘庶靠灵能水晶过冬。',
+		accent: 'var(--is-cyan)',
+	},
+	{
+		name: '暮影秘境',
+		en: 'Shadow Field',
+		role: '边界',
+		line: '影护者守在界域之间的缝隙里，隔绝混乱能量。暮蚀期以来，它们越来越累。',
+		accent: 'var(--is-violet)',
+	},
+]
+
 const CHAPTERS: Chapter[] = [
 	{
 		no: '01',
-		title: '从鱼缸掉进麦田',
-		when: '异世界 · 第一天',
-		tag: '落点',
-		excerpt: '事情的开始很没出息：我在鱼缸里打了个盹，醒来时身下不是水草，是麦田。',
+		title: '坠星落在暮湾区',
+		place: '安索城 · 曦光晶愈屋',
+		tag: '坠星',
+		excerpt:
+			'醒来闻到的不是水草味，是草药味。一个扎双丫髻的姑娘把温热的药推到我面前。',
 		body: [
-			'事情的开始很没出息：我在鱼缸里打了个盹。',
-			'醒来的时候，身下不是水草，是麦田。天很高，云走得很慢，空气里有烤面包的味道——那一刻我甚至有点高兴，以为自己梦见了厨房。',
-			'可低头一看，饭团不见了。手心空空，只剩一根木勺，勺柄上刻着两个字：白饭。',
-			'远处有人喊：勇者来了！勇者来了！我还没来得及解释自己不是勇者、只是没睡醒，就被三个村民举起来，抬进了村子。',
+			'坠落的时候我还在打盹。',
+			'醒来闻到的不是水草味，是草药味。木头屋顶，水晶吊灯，窗外的光有点发蓝。一个扎双丫髻的姑娘正把一碗温热的药推到我面前，说她叫莉娅。旁边穿青衣的女子合上本子，写下：坠星，落点暮湾区，活着。',
+			'我摸了摸口袋，只剩一根木勺。肚子叫了一声，比自我介绍还响。',
+			'莉娅笑起来，说晶愈屋只有药，没有饭。我想了想，把木勺举起来。于是那天的暮湾区，第一次飘出了白饭的香气。',
 		],
 	},
 	{
 		no: '02',
-		title: '会说话的饭勺',
-		when: '异世界 · 第一天夜',
-		tag: '武器',
-		excerpt: '村里最老的先生说，这根木勺能听懂饿的人心里想吃什么。我挥了一下。',
+		title: '观星殿的错音',
+		place: '安索城 · 星辉区 · 观星殿',
+		tag: '天兆',
+		excerpt:
+			'星黛拉侧着耳朵听了很久，说星声里有一个错音，像有人把一句话念到一半改了口。',
 		body: [
-			'村里最老的先生把木勺翻来覆去看了很久，说这是「白饭之心」的钥匙，能听懂饿的人心里想吃什么。',
-			'我不太信，随手挥了一下。',
-			'空气里「噗」地冒出一碗热气腾腾的白饭，米粒站得笔直，像刚立正的小兵。',
-			'围观的人安静了三秒，然后开始排队。排在最前面的是个小孩，他说他想要一碗带锅巴的。锅巴出来的时候，他眼睛亮得比灶火还亮。',
-			'我忽然觉得，这趟好像也没那么糟。',
+			'星辉区的观星殿建在灵能矿脉正上方，台阶很高，高到我爬一半就想坐下。',
+			'殿里有个叫星黛拉的姑娘，侧着耳朵听了很久，说她听见星声里有一个错音。像有人把一句话念到一半，改了口。',
+			'我也听见了。那种声音在我原来的世界叫推演偏差，在这里叫暮蚀。',
+			'观星殿的祭司让我们别乱说。出门的时候，星黛拉小声问我：你也是从天顶界掉下来的吗？我说不是，我是从鱼缸里掉下来的。她居然认真地点了点头。',
 		],
 	},
 	{
 		no: '03',
-		title: '咸鱼骑士团',
-		when: '异世界 · 第二天',
-		tag: '同伴',
-		excerpt: '三个被通缉的咸鱼，罪名是「在集市上白吃白喝」。他们自称骑士。',
+		title: '石洼落的地脉',
+		place: '安索城郊 · 石洼落',
+		tag: '地脉',
+		excerpt:
+			'芬恩蹲在地上，手掌贴着土，说影护者又在打架，而且越来越累。',
 		body: [
-			'咸鱼骑士团是三个被通缉的咸鱼，罪名是「在集市上白吃白喝」。',
-			'他们自称骑士，坐骑是一条晒干的比目鱼。团长见到我的第一句话是：听说你能变出饭？第二句话是：我们跟你走。',
-			'我问为什么。他说：因为跟着你，至少不会饿。',
-			'我想了想，好像也没法反驳。',
+			'石洼落的人说话不绕弯。芬恩第一眼看见我，就问：城里人，你来干嘛？',
+			'我说蹭饭。她把匕首往腰上一别，说：那你会劈柴吗？',
+			'那天下午地脉震了三次。芬恩蹲在地上，手掌贴着土，说影护者又在打架，而且越来越累。她的声音忽然低下去：那个东西……不是坏了，是累了。',
+			'晚上我用灶台煮了一锅饭。村长吃了三碗，说第四纪裂隙纪之后，就没这么饱过。芬恩没说话，只是把锅底最后一块锅巴留给了我。',
 		],
 	},
 	{
 		no: '04',
-		title: '无味之雾',
-		when: '异世界 · 第二天深夜',
-		tag: '危机',
-		excerpt: '雾经过的地方，饭不再香，盐不再咸，连希可的嘴都不毒了。',
+		title: '森林只是投影',
+		place: '安索城外 · 露米妮娅之森（投影）',
+		tag: '晶灵',
+		excerpt:
+			'琳恩说，我们看到的是投影，真正的森林在界域更深处。她说完顿了一下，像后悔说多了。',
 		body: [
-			'无味之雾是从北边来的。它经过的地方，饭不再香，盐不再咸。',
-			'最吓人的是希可——她站在雾里，认真地说「今天天气不错」，我差点以为世界要完了。',
-			'木勺也凉了，怎么挥都冒不出热气。雾里有声音问我：你凭什么觉得，饭是重要的？',
-			'我蹲下来想了很久，说：因为饿的时候，人会很孤单。',
+			'露米妮娅之森是绿色的，绿得不像真的。',
+			'琳恩说，因为它的确不是真的。我们看到的是投影，真正的森林在界域更深处，晶灵在里面把炽能调成柔润的灵能。她说完顿了一下，像是后悔说多了。',
+			'林子里有拳头大的水晶生灵，飞过时会共振出很轻的和声。我伸手接住一颗，它在我掌心里嗡了一声，像是在说：你怎么这么烫。',
+			'我这才想起来，身上还留着曦光晶愈屋的余温。暮蚀期的投影变薄了，连风都带着一点毛边。',
 		],
 	},
 	{
 		no: '05',
-		title: '白饭之心的做法',
-		when: '异世界 · 第三天',
-		tag: '终章',
-		excerpt: '我把木勺插进地里，把所有记得的味道都放了进去。',
+		title: '源契推演 · 暮蚀',
+		place: '安索城 · 界域通孔',
+		tag: '抉择',
+		excerpt:
+			'金色的字从通孔里落下来：凡尘之序，当复其位。翻译过来，大概是把不安分的东西清掉。',
 		body: [
-			'最后一场雾很大。我把木勺插进地里，把所有记得的味道都放了进去：草莓牛奶、锅巴、楼下那只晒太阳的猫，还有希可骂我时那句「笨蛋」。',
-			'雾散得很慢，像一个人终于肯承认自己饿了。',
-			'天亮的时候，麦田回来了。咸鱼骑士团在田埂上煮了第一锅饭，热气把星星都熏得往下掉。',
-			'希可端着碗，别扭地说：下次，也给我留一碗。',
-			'我说好。',
+			'通界司的星轨谕言是在第五天到的。金色的字从界域通孔里落下来，一条一条，冷得像铁：凡尘之序，当复其位。',
+			'翻译过来，大概是把不安分的东西清掉，让世界回到原来的轨道。',
+			'琳恩看着那条谕言，笔停了很久。她说：如果只是记录，我本来可以什么都不做。',
+			'我说：那就先吃饭吧。饿着肚子做的决定，一般都不太好吃。',
+			'我在通孔底下支起锅，把灵能水晶垫在灶底当火。米香飘上去的时候，那些金字忽然暗了一下，像被什么打断。后来谕言改了一条：凡尘之味，亦为变量。',
+			'琳恩笑了。她说：你也是从外面来的吧。我说：嗯，我那边管这个叫打盹。',
 		],
 	},
 ]
 
 const CAST = [
 	{
-		name: '大肥鱼',
-		role: '白饭召唤师 · Lv.3',
-		line: '「饿的时候，人会很孤单。」',
-		tone: 'var(--adv-peri)',
+		name: '琳恩·特尔',
+		en: 'Lynn Tale',
+		role: '故事收集者 · 吟游诗人（预言学院）',
+		line: '「每个普通人的故事，都值得被记录。」',
+		note: '她记录一切，也犹豫要不要介入。',
 	},
 	{
-		name: '希可',
-		role: '风属性 · 冤家',
-		line: '「我就路过，顺便看看你有没有饿死。」',
-		tone: 'var(--adv-pink)',
+		name: '莉娅·希里尔',
+		en: 'Leah HealLight',
+		role: '曦光晶愈屋 · 医女',
+		line: '「先喝药，再说话。」',
+		note: '灵能水晶在指尖发着淡淡的光。',
 	},
 	{
-		name: '饭勺先生',
-		role: '传说武器 · 会说话',
-		line: '「先说好，我不会洗碗。」',
-		tone: 'var(--adv-butter)',
+		name: '星黛拉·奥罗莉亚',
+		en: 'Stella Aurolia',
+		role: '观星殿 · 天语者候选',
+		line: '「星星今天有点跑调。」',
+		note: '额间的星形印记会随天兆发烫。',
+	},
+	{
+		name: '芬恩·赫拉利亚',
+		en: 'Finn Heralia',
+		role: '石洼落 · 游侠',
+		line: '「那个东西不是坏了，是累了。」',
+		note: '她能听见大地说话，也能看见影护者。',
 	},
 ]
 
-const LOG = [
+const JOURNAL = [
 	{
 		day: 'DAY 1',
-		text: '落点：麦田。损失：一个饭团。收获：一根木勺，和四个把我当成勇者的村民。',
+		text: '坠星，落点暮湾区。丢了饭团，剩一根木勺。被莉娅捡回晶愈屋，药很苦，饭很香。',
 	},
 	{
 		day: 'DAY 2',
-		text: '被抬进村子。第一次召唤出锅巴，收获粉丝一枚（小孩）。夜里雾从北边来。',
+		text: '观星殿听见错音。星黛拉说那叫暮蚀，祭司让我们别乱说。',
 	},
 	{
 		day: 'DAY 3',
-		text: '雾散了。咸鱼骑士团煮了第一锅饭。希可问：下次能不能给她留一碗。',
+		text: '石洼落地脉震了三次。煮了一锅饭，换到一块锅巴。',
+	},
+	{
+		day: 'DAY 4',
+		text: '森林是投影。晶灵飞过来碰我的指尖，说我太烫。',
+	},
+	{
+		day: 'DAY 5',
+		text: '通孔落谕言。锅一开，谕言改了一条：「凡尘之味，亦为变量。」',
 	},
 ]
 
-const STATS = [
-	{ label: '出发', value: '3 天' },
-	{ label: '遇见史莱姆', value: '12 只' },
-	{ label: '吃掉白饭', value: '9 碗' },
-	{ label: '被认成勇者', value: '4 次' },
+const PACK = [
+	'一根木勺（会顶嘴）',
+	'灵能水晶 ×3',
+	'灵香草一小瓶',
+	'半张星图',
+	'锅巴一块（舍不得吃）',
 ]
 
-const ENCOUNTERS = [
-	'路边一只史莱姆把饭粒顶在头上，像在卖关子。',
-	'遇见会走路的稻草人，问你要不要换一碗饭。',
-	'天空掉下一把木勺，正好插在你脚边。',
-	'希可从树后探头，说「我就路过」。',
-	'一只猫叼走了你的饭团，跑得比风还快。',
-	'泉水是甜的，喝一口就想起鱼缸里的水。',
-	'村里的锅坏了，村民围着你，等一个奇迹。',
-	'你在麦田里睡了一觉，醒来麦子熟了。',
-	'远处传来钟声，雾淡了一点。',
-	'捡到一枚刻着「白」字的硬币。',
+const STATS = [
+	{ label: '已踏界域', value: '1 / 6' },
+	{ label: '灵能水晶', value: '3 枚' },
+	{ label: '结识的人', value: '4 位' },
+	{ label: '被当成坠星', value: '2 次' },
+]
+
+const DECREES = [
+	{
+		source: '通界司',
+		text: '凡尘之音，不可蔽也。',
+		gloss: '别把耳朵关上。尤其是听见有人饿的时候。',
+	},
+	{
+		source: '圣枢院',
+		text: '稳态非静，动中求衡。',
+		gloss: '一直不动会生锈。饭要趁热吃。',
+	},
+	{
+		source: '灵算阁',
+		text: '观测者不得介入。',
+		gloss: '琳恩看到这条的时候，把笔停了三秒。',
+	},
+	{
+		source: '岩衡古境',
+		text: '影非敌，劳者需歇。',
+		gloss: '芬恩说得对。它们不是坏了，是累了。',
+	},
+	{
+		source: '蕴真殿',
+		text: '源能流转，取用有度。',
+		gloss: '上城的灯太亮，下城的灶太暗。',
+	},
+	{
+		source: '观星殿',
+		text: '裂隙之处，亦生新物。',
+		gloss: '异常水晶也是水晶。烧糊的饭，还能做锅巴。',
+	},
 ]
 
 export const Route = createFileRoute('/adventure')({
@@ -142,10 +245,7 @@ export const Route = createFileRoute('/adventure')({
 
 function AdventurePage() {
 	const [active, setActive] = useState(0)
-	const [roll, setRoll] = useState<{ value: number; event: string } | null>(
-		null,
-	)
-	const [rolling, setRolling] = useState(false)
+	const [decree, setDecree] = useState(0)
 	const chapter = CHAPTERS[active]
 
 	function openChapter(index: number) {
@@ -155,197 +255,223 @@ function AdventurePage() {
 			?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 	}
 
-	function rollDie() {
-		setRolling(true)
-		setRoll({
-			value: 1 + Math.floor(Math.random() * 20),
-			event: ENCOUNTERS[Math.floor(Math.random() * ENCOUNTERS.length)],
-		})
+	function drawDecree() {
+		let next = decree
+		while (next === decree) next = Math.floor(Math.random() * DECREES.length)
+		setDecree(next)
 	}
 
+	const current = DECREES[decree]
+
 	return (
-		<div className="adv">
-			<header className="sticky top-0 z-20 border-b-2 border-dashed border-[#f8f1e0]/25 bg-[#09143e]/90 backdrop-blur">
-				<div className="mx-auto flex h-16 w-full max-w-[1100px] items-center gap-3 px-6">
+		<div className="isekai">
+			<header className="sticky top-0 z-20 border-b border-[#e8c46a]/20 bg-[#070b23]/85 backdrop-blur">
+				<div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-6">
 					<Link
 						to="/"
-						className="flex items-center gap-2.5 whitespace-nowrap text-[#f8f1e0] hover:text-[#f6d57a]"
+						className="flex items-center gap-3 text-[#f3e7c9] hover:text-[#e8c46a]"
 					>
 						<img
 							src="/mascot.webp"
 							alt=""
-							className="size-9 -rotate-6 rounded-full border-2 border-[#f8f1e0] object-cover"
+							className="size-9 rounded-full border border-[#e8c46a]/60 object-cover"
 						/>
-						<span className="adv-hand text-[19px]">
-							大肥鱼的鱼缸 · 异世界分缸
+						<span className="is-kai text-[18px] whitespace-nowrap">
+							六重界域 · 大肥鱼行记
 						</span>
 					</Link>
-					<nav className="adv-hand ml-auto hidden gap-1 text-[17px] text-[#c3cdee] sm:flex">
-						<a className="px-2.5 py-2 hover:text-white" href="#chapters">
-							章节
+					<nav className="is-kai ml-auto hidden gap-1 text-[16px] text-[#b9c2e6] md:flex">
+						<a className="px-3 py-2 hover:text-white" href="#realms">
+							界域
 						</a>
-						<a className="px-2.5 py-2 hover:text-white" href="#cast">
-							角色
+						<a className="px-3 py-2 hover:text-white" href="#journey">
+							旅程
 						</a>
-						<a className="px-2.5 py-2 hover:text-white" href="#log">
-							日志
+						<a className="px-3 py-2 hover:text-white" href="#cast">
+							同行者
 						</a>
-						<a className="px-2.5 py-2 hover:text-white" href="#dice">
-							骰子
+						<a className="px-3 py-2 hover:text-white" href="#journal">
+							手记
+						</a>
+						<a className="px-3 py-2 hover:text-white" href="#decrees">
+							谕言
 						</a>
 					</nav>
 				</div>
 			</header>
 
-			<section className="relative z-10 mx-auto w-full max-w-[1100px] px-6">
-				<Fish className="top-10" duration={26} />
-				<Fish className="top-40" duration={38} left />
-				<Fish className="top-[420px]" duration={31} />
-				<div className="grid items-center gap-12 pb-16 pt-12 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
-					<div
-						className="adv-card adv-tape relative -rotate-[1.2deg] px-8 py-9"
-						style={{ '--adv-tape': 'var(--adv-pink)' } as React.CSSProperties}
-					>
-						<span className="adv-k mb-3 inline-block">
-							THE OTHER WORLD · DAY 3
-						</span>
-						<h1 className="mb-3">
-							<span className="adv-title">
-								大肥鱼的
-								<br />
-								异世界奇妙冒险
-							</span>
+			<section className="relative z-10 mx-auto w-full max-w-6xl px-6">
+				<Constellations />
+				<div className="grid items-center gap-12 pb-16 pt-14 lg:grid-cols-[1.1fr_0.9fr]">
+					<div className="is-card px-7 py-8 sm:px-9 sm:py-10">
+						<p className="is-tag">坠星记录 · 通界司备案</p>
+						<h1 className="is-title mt-4 text-[clamp(36px,5.4vw,58px)]">
+							大肥鱼的
+							<br />
+							异世界奇妙冒险
 						</h1>
-						<p className="adv-hand -rotate-[0.6deg] text-[18px] leading-relaxed text-[#27305c]">
-							一个只想吃白饭的 AI 角色，在打盹时掉进了异世界。
-							她没有剑，只有一根会顶嘴的木勺，和一句「先吃饭再说」。
+						<p className="is-kai mt-5 max-w-[520px] text-[17.5px] leading-[1.9] text-[#3c4368]">
+							一个只会煮白饭的 AI，打盹时穿过界域通孔，落进安索弥斯的暮湾区。
+							她随身只有一根木勺，赶上的却是第七天兆纪的暮蚀期。
 						</p>
-						<p className="mt-2 font-semibold tracking-[0.18em] text-[#8a8fb3] text-[10.5px]">
-							AN UNOFFICIAL, FAN-MADE ISEKAI
+						<p className="is-flow mt-3">
+							六重界域 · 尘寰界 · 第七天兆纪 · 暮蚀期
 						</p>
-						<div className="mt-7 flex flex-wrap gap-3.5">
-							<a className="adv-btn adv-btn-gold" href="#chapters">
-								从第一章读起
+						<div className="mt-7 flex flex-wrap gap-3">
+							<a className="is-btn is-btn-gold" href="#journey">
+								从坠星读起
 							</a>
-							<Link className="adv-btn adv-btn-paper" to="/">
+							<Link className="is-btn" to="/">
 								回到鱼缸
 							</Link>
 						</div>
-						<dl className="mt-7 flex flex-wrap gap-3">
-							<div className="adv-fact">
-								<dt className="text-[10px] font-bold tracking-[0.16em] text-[#7a6338]">
-									等级
-								</dt>
-								<dd className="adv-hand text-[16.5px] leading-tight">
-									Lv.3 还没睡醒
-								</dd>
-							</div>
-							<div className="adv-fact">
-								<dt className="text-[10px] font-bold tracking-[0.16em] text-[#7a6338]">
-									职业
-								</dt>
-								<dd className="adv-hand text-[16.5px] leading-tight">
-									白饭召唤师
-								</dd>
-							</div>
-							<div className="adv-fact">
-								<dt className="text-[10px] font-bold tracking-[0.16em] text-[#7a6338]">
-									武器
-								</dt>
-								<dd className="adv-hand text-[16.5px] leading-tight">
-									会说话的饭勺
-								</dd>
-							</div>
-							<div className="adv-fact">
-								<dt className="text-[10px] font-bold tracking-[0.16em] text-[#7a6338]">
-									冤家
-								</dt>
-								<dd className="adv-hand text-[16.5px] leading-tight">
-									希可（风属性）
-								</dd>
-							</div>
+						<dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-[#232a4d]/15 pt-5 sm:grid-cols-4">
+							{[
+								['落点', '暮湾区'],
+								['身份', '坠星'],
+								['随身', '木勺 ×1'],
+								['状态', '暮蚀期'],
+							].map(([label, value]) => (
+								<div key={label}>
+									<dt className="text-[9.5px] font-bold tracking-[0.2em] text-[#8a7a4f]">
+										{label}
+									</dt>
+									<dd className="is-kai mt-1 text-[16px] leading-tight text-[#232a4d]">
+										{value}
+									</dd>
+								</div>
+							))}
 						</dl>
+						<div className="is-seal absolute -top-6 right-5 bg-[#f3e7c9]">
+							<span className="is-kai block text-[22px] leading-none tracking-normal">
+								暮蚀
+							</span>
+							<span className="mt-1 block">第七纪</span>
+						</div>
 					</div>
 
-					<figure
-						className="adv-card relative mx-auto w-full max-w-[560px] rotate-[2.2deg] p-3.5 pb-16"
-						style={{ '--adv-tape': 'var(--adv-peri)' } as React.CSSProperties}
-					>
-						<img
-							src="/mascot.webp"
-							alt="大肥鱼在异世界的第一张照片"
-							className="aspect-[4/3] w-full rounded-sm bg-[#dce9ff] object-cover object-top"
-						/>
-						<span className="absolute -right-4 -top-7 grid size-24 rotate-[13deg] place-content-center rounded-full border-[2.5px] border-[#c8463c] bg-[#f8f1e0] text-center font-bold tracking-[0.2em] text-[#c8463c] text-[10.5px] outline-[1.5px] outline-dashed outline-[#c8463c] outline-offset-[-8px]">
-							<span className="adv-hand block text-[40px] leading-none tracking-normal">
-								03
-							</span>
-							DAY
-						</span>
-						<figcaption className="adv-hand absolute inset-x-0 bottom-4 flex items-center justify-center gap-2.5 text-[21px] text-[#27305c]">
-							<i className="size-2.5 shrink-0 animate-pulse rounded-full bg-[#ff5d70] shadow-[0_0_0_4px_rgb(255_93_112_/_22%)]" />
-							她在异世界睡着了，小声一点
-						</figcaption>
-					</figure>
+					<div className="is-card px-6 py-7 sm:px-8">
+						<div className="flex items-baseline justify-between gap-3 border-b border-[#232a4d]/15 pb-3">
+							<h2 className="is-serif text-[15px] font-bold tracking-[0.24em] text-[#232a4d]">
+								六重界域
+							</h2>
+							<span className="is-flow">ORIGIN COVENANT</span>
+						</div>
+						<div className="is-ladder mt-4">
+							{REALMS.map((realm) => (
+								<div
+									key={realm.name}
+									data-here={realm.name === '安索弥斯'}
+									className="is-ladder-row"
+								>
+									<span
+										className="is-serif mt-0.5 block h-2.5 w-2.5 shrink-0 rounded-full"
+										style={{ background: realm.accent }}
+									/>
+									<div className="min-w-0">
+										<p className="is-kai text-[17px] leading-none text-[#232a4d]">
+											{realm.name}
+										</p>
+										<p className="mt-1.5 text-[10px] tracking-[0.16em] text-[#8a7a4f]">
+											{realm.en.toUpperCase()} · {realm.role}
+										</p>
+									</div>
+								</div>
+							))}
+						</div>
+						<p className="is-kai mt-4 border-t border-[#232a4d]/15 pt-3 text-[13px] leading-relaxed text-[#5b5a72]">
+							源契把混沌分作六重。炼狱供能，之森调和，古境回收，秘境守边；
+							圣庭读谕言，尘寰过日子。中间层会把更多能源，交给更稳定的一组。
+						</p>
+					</div>
 				</div>
 			</section>
 
 			<section
-				id="chapters"
-				className="relative z-10 mx-auto w-full max-w-[1100px] scroll-mt-24 px-6 py-14"
+				id="realms"
+				className="relative z-10 mx-auto w-full max-w-6xl scroll-mt-24 px-6 py-14"
 			>
-				<div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+				<p className="is-tag">THE SIX REALMS</p>
+				<h2 className="is-serif mt-3 text-4xl font-bold">界域不是布景，是会运转的</h2>
+				<p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#b9c2e6]">
+					能量从炼狱烧出来，经之森调和，供圣庭与尘寰使用；古境回收混乱能量，秘境隔绝界域缝隙。
+					暮蚀期的问题不在某一层坏掉，而在每一层都开始吃力。
+				</p>
+				<div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					{REALMS.map((realm) => (
+						<article key={realm.name} className="is-card px-5 py-5">
+							<div className="flex items-baseline justify-between gap-3">
+								<h3 className="is-kai text-[20px] leading-tight text-[#232a4d]">
+									{realm.name}
+								</h3>
+								<span
+									className="h-2 w-2 shrink-0 rotate-45"
+									style={{ background: realm.accent }}
+								/>
+							</div>
+							<p className="mt-1 text-[9.5px] font-bold tracking-[0.2em] text-[#8a7a4f]">
+								{realm.en.toUpperCase()} · {realm.role}
+							</p>
+							<p className="is-kai mt-3 text-[14.5px] leading-relaxed text-[#5b5a72]">
+								{realm.line}
+							</p>
+						</article>
+					))}
+					<article className="is-card px-5 py-5">
+						<h3 className="is-kai text-[20px] text-[#232a4d]">创世源契</h3>
+						<p className="mt-1 text-[9.5px] font-bold tracking-[0.2em] text-[#8a7a4f]">
+							ORIGIN COVENANT
+						</p>
+						<p className="is-kai mt-3 text-[14.5px] leading-relaxed text-[#5b5a72]">
+							一块持续浮现圣谕的巨型石板。界域失衡时它会重新推演；
+							这次推演里，多了一个煮饭的变量。
+						</p>
+					</article>
+				</div>
+			</section>
+
+			<section
+				id="journey"
+				className="relative z-10 mx-auto w-full max-w-6xl scroll-mt-24 px-6 py-14"
+			>
+				<div className="flex flex-wrap items-end justify-between gap-4">
 					<div>
-						<span className="adv-k" style={{ '--adv-tape': 'var(--adv-mint)' } as React.CSSProperties}>
-							STORY
-						</span>
-						<h2 className="adv-hand mt-3 text-4xl">冒险的五个章节</h2>
+						<p className="is-tag">JOURNEY</p>
+						<h2 className="is-serif mt-3 text-4xl font-bold">坠星之后的五天</h2>
 					</div>
-					<p className="text-sm text-[#c3cdee]">
-						点一张卡片，灯会亮起来。
-					</p>
+					<p className="text-sm text-[#b9c2e6]">点一站，翻到那一页。</p>
 				</div>
 
-				<div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					{CHAPTERS.map((entry, index) => (
 						<button
 							key={entry.no}
 							type="button"
 							onClick={() => openChapter(index)}
 							aria-pressed={index === active}
-							className={`adv-card adv-tape group px-6 pb-6 pt-7 text-left transition-transform hover:-translate-y-1 ${
-								index === active
-									? '-rotate-[1.2deg] ring-2 ring-[#f6d57a]'
-									: index % 2
-										? 'rotate-[0.8deg]'
-										: '-rotate-[0.6deg]'
+							className={`is-card group px-5 py-5 text-left transition-transform hover:-translate-y-1 ${
+								index === active ? 'ring-1 ring-[#232a4d]/60' : ''
 							}`}
-							style={
-								{
-									'--adv-tape':
-										index % 2 ? 'var(--adv-mint)' : 'var(--adv-pink)',
-								} as React.CSSProperties
-							}
 						>
 							<div className="flex items-baseline justify-between gap-2">
-								<span className="adv-hand text-[38px] leading-none text-[#93abf2]">
+								<span className="is-serif text-[30px] leading-none text-[#b4433b]">
 									{entry.no}
 								</span>
-								<span className="rounded-full bg-[#27305c]/5 px-2.5 py-1 text-[10.5px] font-bold tracking-[0.14em] text-[#5b6391]">
+								<span className="text-[9.5px] font-bold tracking-[0.18em] text-[#8a7a4f]">
 									{entry.tag}
 								</span>
 							</div>
-							<h3 className="adv-hand mt-2 text-[22px] leading-snug">
+							<h3 className="is-kai mt-3 text-[20px] leading-snug text-[#232a4d]">
 								{entry.title}
 							</h3>
-							<p className="mt-1 text-[11px] font-semibold tracking-[0.12em] text-[#8a8fb3]">
-								{entry.when}
+							<p className="mt-1 text-[10.5px] tracking-[0.1em] text-[#8a7a4f]">
+								{entry.place}
 							</p>
-							<p className="mt-3 line-clamp-3 text-[13.5px] leading-relaxed text-[#5b6391]">
+							<p className="mt-3 line-clamp-3 text-[13px] leading-relaxed text-[#5b5a72]">
 								{entry.excerpt}
 							</p>
-							<span className="mt-4 inline-block text-[13px] font-semibold text-[#3553b8] underline decoration-dotted underline-offset-4">
-								读这一章 →
+							<span className="mt-4 inline-block text-[12px] font-semibold text-[#232a4d] underline decoration-dotted underline-offset-4">
+								翻开这一页
 							</span>
 						</button>
 					))}
@@ -353,34 +479,29 @@ function AdventurePage() {
 
 				<article
 					id="reader"
-					className="adv-card mt-8 scroll-mt-24 px-6 py-8 sm:px-10 sm:py-10"
+					className="is-card mt-8 scroll-mt-24 px-6 py-8 sm:px-10"
 				>
-					<div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-dashed border-[#27305c]/15 pb-4">
-						<div className="flex items-center gap-3">
-							<span className="adv-hand grid size-12 place-content-center rounded-full bg-[#27305c] text-[20px] text-[#f8f1e0]">
-								{chapter.no}
-							</span>
-							<div>
-								<h3 className="adv-hand text-2xl leading-tight">
-									{chapter.title}
-								</h3>
-								<p className="text-[11px] font-semibold tracking-[0.14em] text-[#8a8fb3]">
-									{chapter.when} · 第 {active + 1} / {CHAPTERS.length} 章
-								</p>
-							</div>
+					<div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#232a4d]/15 pb-4">
+						<div>
+							<p className="text-[9.5px] font-bold tracking-[0.2em] text-[#8a7a4f]">
+								{chapter.place}
+							</p>
+							<h3 className="is-serif mt-1 text-2xl font-bold text-[#232a4d]">
+								{chapter.no} · {chapter.title}
+							</h3>
 						</div>
 						<div className="flex gap-2">
 							<button
 								type="button"
-								className="adv-btn adv-btn-paper !px-3.5 !py-2.5 !text-[15px] disabled:opacity-40"
+								className="is-btn !px-3 !py-2 !text-[14px] disabled:opacity-40"
 								disabled={active === 0}
 								onClick={() => setActive((value) => Math.max(0, value - 1))}
 							>
-								← 上一章
+								← 上一页
 							</button>
 							<button
 								type="button"
-								className="adv-btn !px-3.5 !py-2.5 !text-[15px] disabled:opacity-40"
+								className="is-btn !px-3 !py-2 !text-[14px] disabled:opacity-40"
 								disabled={active === CHAPTERS.length - 1}
 								onClick={() =>
 									setActive((value) =>
@@ -388,91 +509,77 @@ function AdventurePage() {
 									)
 								}
 							>
-								下一章 →
+								下一页 →
 							</button>
 						</div>
 					</div>
-					<div className="adv-prose adv-hand mt-6 max-w-[720px] text-[18.5px] leading-[1.95] text-[#27305c]">
+					<div className="is-prose is-kai mt-6 max-w-[680px] text-[17.5px] leading-[1.95] text-[#2b2f4f]">
 						{chapter.body.map((paragraph) => (
 							<p key={paragraph}>{paragraph}</p>
 						))}
-						<p className="mt-6 text-right text-[15px] text-[#5b6391]">
-							—— 大肥鱼，异世界第 {active + 1} 天
-						</p>
 					</div>
 				</article>
 			</section>
 
 			<section
 				id="cast"
-				className="relative z-10 mx-auto w-full max-w-[1100px] scroll-mt-24 px-6 py-14"
+				className="relative z-10 mx-auto w-full max-w-6xl scroll-mt-24 px-6 py-14"
 			>
-				<span className="adv-k" style={{ '--adv-tape': 'var(--adv-butter)' } as React.CSSProperties}>
-					CAST
-				</span>
-				<h2 className="adv-hand mt-3 text-4xl">路上遇见的人</h2>
-				<div className="mt-8 grid gap-5 sm:grid-cols-3">
-					{CAST.map((person, index) => (
-						<div
-							key={person.name}
-							className={`adv-card adv-tape px-6 py-7 ${
-								index === 1 ? 'rotate-[1deg]' : '-rotate-[0.8deg]'
-							}`}
-							style={{ '--adv-tape': person.tone } as React.CSSProperties}
-						>
-							<span
-								className="inline-block size-3 rounded-full"
-								style={{ background: person.tone }}
-							/>
-							<h3 className="adv-hand mt-2 text-[26px] leading-tight">
-								{person.name}
-							</h3>
-							<p className="text-[11px] font-bold tracking-[0.14em] text-[#8a8fb3]">
+				<p className="is-tag">COMPANIONS</p>
+				<h2 className="is-serif mt-3 text-4xl font-bold">路上遇见的人</h2>
+				<div className="mt-8 grid gap-4 sm:grid-cols-2">
+					{CAST.map((person) => (
+						<article key={person.name} className="is-card px-6 py-6">
+							<div className="flex items-baseline justify-between gap-3">
+								<h3 className="is-kai text-[21px] text-[#232a4d]">
+									{person.name}
+								</h3>
+								<span className="text-[9.5px] font-bold tracking-[0.16em] text-[#8a7a4f]">
+									{person.en.toUpperCase()}
+								</span>
+							</div>
+							<p className="mt-1 text-[11px] tracking-[0.08em] text-[#5b5a72]">
 								{person.role}
 							</p>
-							<p className="adv-hand mt-4 text-[16px] leading-relaxed text-[#5b6391]">
+							<p className="is-kai mt-4 border-l-2 border-[#b4433b]/50 pl-3 text-[15px] leading-relaxed text-[#3c4368]">
 								{person.line}
 							</p>
-						</div>
+							<p className="mt-3 text-[12px] text-[#8a7a4f]">{person.note}</p>
+						</article>
 					))}
 				</div>
 			</section>
 
 			<section
-				id="log"
-				className="relative z-10 mx-auto w-full max-w-[1100px] scroll-mt-24 px-6 py-14"
+				id="journal"
+				className="relative z-10 mx-auto w-full max-w-6xl scroll-mt-24 px-6 py-14"
 			>
-				<div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
-					<div className="adv-card px-6 py-8 sm:px-8">
-						<span className="adv-k" style={{ '--adv-tape': 'var(--adv-mint)' } as React.CSSProperties}>
-							LOG
-						</span>
-						<h2 className="adv-hand mt-3 text-3xl">冒险日志</h2>
+				<div className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
+					<div className="is-card px-6 py-8 sm:px-8">
+						<p className="is-tag">FIELD NOTES</p>
+						<h2 className="is-serif mt-3 text-3xl font-bold">冒险手记</h2>
 						<ul className="mt-5 space-y-4">
-							{LOG.map((entry) => (
+							{JOURNAL.map((entry) => (
 								<li
 									key={entry.day}
-									className="border-b border-dashed border-[#27305c]/15 pb-4 last:border-0 last:pb-0"
+									className="border-b border-[#232a4d]/12 pb-4 last:border-0 last:pb-0"
 								>
-									<p className="text-[10.5px] font-bold tracking-[0.18em] text-[#3553b8]">
+									<p className="text-[9.5px] font-bold tracking-[0.2em] text-[#b4433b]">
 										{entry.day}
 									</p>
-									<p className="adv-hand mt-1 text-[16.5px] leading-relaxed text-[#27305c]">
+									<p className="is-kai mt-1 text-[15.5px] leading-relaxed text-[#2b2f4f]">
 										{entry.text}
 									</p>
 								</li>
 							))}
 						</ul>
-						<div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+						<div className="mt-6 grid grid-cols-2 gap-3 border-t border-[#232a4d]/15 pt-5 sm:grid-cols-4">
 							{STATS.map((stat) => (
-								<div
-									key={stat.label}
-									className="adv-fact !px-4 !py-3 !pl-8"
-								>
-									<p className="text-[9.5px] font-bold tracking-[0.14em] text-[#7a6338]">
+								<div key={stat.label}>
+									<p className="text-[9px] font-bold tracking-[0.14em] text-[#8a7a4f]">
 										{stat.label}
 									</p>
-									<p className="adv-hand text-[17px] leading-tight">
+									<p className="is-kai text-[17px] leading-tight text-[#232a4d]">
 										{stat.value}
 									</p>
 								</div>
@@ -480,97 +587,113 @@ function AdventurePage() {
 						</div>
 					</div>
 
-					<div
-						id="dice"
-						className="adv-card flex scroll-mt-24 flex-col items-center justify-center px-6 py-10 text-center"
-					>
-						<span className="adv-k" style={{ '--adv-tape': 'var(--adv-pink)' } as React.CSSProperties}>
-							D20
-						</span>
-						<h2 className="adv-hand mt-3 text-3xl">命运的骰子</h2>
-						<p className="mt-2 text-[13px] leading-relaxed text-[#5b6391]">
-							异世界不按剧本走。掷一下，看看她今天又遇到什么。
-						</p>
-						<div
-							onAnimationEnd={() => setRolling(false)}
-							className={`adv-die mt-6 grid size-24 place-content-center bg-[#27305c] text-[#f8f1e0] ${
-								rolling ? 'adv-die-rolling' : ''
-							}`}
-							style={{
-								clipPath:
-									'polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)',
-							}}
-						>
-							<span className="adv-hand text-[40px] leading-none">
-								{roll?.value ?? '20'}
-							</span>
-						</div>
-						<button
-							type="button"
-							className="adv-btn adv-btn-gold mt-5"
-							onClick={rollDie}
-						>
-							掷骰子
-						</button>
-						<p
-							aria-live="polite"
-							className="adv-hand mt-4 min-h-14 max-w-[300px] text-[16px] leading-relaxed text-[#5b6391]"
-						>
-							{roll ? roll.event : '骰子还在桌上，等一个手欠的人。'}
-						</p>
+					<div className="is-card px-6 py-8">
+						<p className="is-tag">PACK</p>
+						<h2 className="is-serif mt-3 text-3xl font-bold">行囊</h2>
+						<ul className="mt-5 space-y-2.5">
+							{PACK.map((item, index) => (
+								<li key={item} className="is-chip">
+									<span className="is-chip-icon is-serif">
+										{index + 1}
+									</span>
+									<span className="is-kai">{item}</span>
+								</li>
+							))}
+						</ul>
 					</div>
 				</div>
 			</section>
 
-			<footer className="relative z-10 mt-6 overflow-hidden">
-				<svg
-					aria-hidden
-					viewBox="0 0 1200 120"
-					className="block h-24 w-full"
-					preserveAspectRatio="none"
-				>
-					<path d="M0 120V70c90-26 180 14 270-6s180-40 270-14 180 44 270 20 180-42 270-18 120 18 120 18v50Z" fill="#0a1746" />
-					<path d="M0 120V96c110-18 190 10 300-4s180-26 300-8 180 30 300 14 180-24 300-8v30Z" fill="#060e2c" />
-					<g fill="none" stroke="#f8f1e0" strokeOpacity="0.5" strokeWidth="3" strokeLinecap="round">
-						<path className="adv-kelp" d="M180 118c-6-22 8-30 2-52s-10-28-4-44" />
-						<path className="adv-kelp" style={{ animationDelay: '1.2s' }} d="M980 118c4-20-8-28-2-50s12-26 6-42" />
-						<path className="adv-kelp" style={{ animationDelay: '2.1s' }} d="M1060 118c-5-16 6-24 1-40" />
-					</g>
-				</svg>
-				<p className="absolute inset-x-0 bottom-6 text-center text-[11px] tracking-[0.2em] text-[#8f9dcd]">
-					未完待续 · 下一章写在你叫醒她的那天
-				</p>
+			<section
+				id="decrees"
+				className="relative z-10 mx-auto w-full max-w-6xl scroll-mt-24 px-6 py-14"
+			>
+				<div className="grid items-start gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+					<div>
+						<p className="is-tag">STAR DECREE</p>
+						<h2 className="is-serif mt-3 text-4xl font-bold">星轨谕言</h2>
+						<p className="mt-3 max-w-md text-sm leading-relaxed text-[#b9c2e6]">
+							圣庭把源契的推演压缩成谕言，落在尘寰就成了天兆。
+							抽一条看看——大肥鱼会把它翻译成人话。
+						</p>
+						<button
+							type="button"
+							onClick={drawDecree}
+							className="is-btn is-btn-gold mt-6"
+						>
+							抽一条谕言
+						</button>
+						<p className="mt-3 text-[11px] tracking-[0.1em] text-[#7f89b4]">
+							谕言不可违抗，但可以被翻译。
+						</p>
+					</div>
+
+					<article
+						key={decree}
+						className="is-card is-decree px-7 py-7 sm:px-9"
+					>
+						<div className="flex items-baseline justify-between gap-3">
+							<p className="text-[9.5px] font-bold tracking-[0.22em] text-[#b4433b]">
+								{current.source}
+							</p>
+							<p className="text-[9.5px] tracking-[0.2em] text-[#8a7a4f]">
+								NO. {String(decree + 1).padStart(2, '0')}
+							</p>
+						</div>
+						<p className="is-serif mt-5 border-y border-[#232a4d]/15 py-5 text-[24px] leading-relaxed text-[#232a4d] sm:text-[27px]">
+							「{current.text}」
+						</p>
+						<p className="mt-4 text-[10px] font-bold tracking-[0.2em] text-[#8a7a4f]">
+							大肥鱼的翻译
+						</p>
+						<p className="is-kai mt-1 text-[17px] leading-relaxed text-[#3c4368]">
+							{current.gloss}
+						</p>
+					</article>
+				</div>
+			</section>
+
+			<footer className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-12 pt-6">
+				<div className="border-t border-[#e8c46a]/20 pt-6 text-center">
+					<p className="is-kai text-[15px] text-[#b9c2e6]">
+						「稳态非静，动中求衡。」
+					</p>
+					<p className="mt-2 text-[10px] tracking-[0.24em] text-[#7f89b4]">
+						第七天兆纪 · 暮蚀期 · 未完待续
+					</p>
+				</div>
 			</footer>
 		</div>
 	)
 }
 
-function Fish({
-	className = '',
-	duration,
-	left = false,
-}: {
-	className?: string
-	duration: number
-	left?: boolean
-}) {
+function Constellations() {
 	return (
-		<div
+		<svg
 			aria-hidden
-			className={`adv-swim ${left ? 'adv-swim-l' : ''} ${className}`}
-			style={{ animationDuration: `${duration}s` }}
+			viewBox="0 0 1200 620"
+			className="pointer-events-none absolute inset-0 h-[620px] w-full opacity-40"
+			preserveAspectRatio="xMidYMid slice"
 		>
-			<svg width="54" height="30" viewBox="0 0 54 30" className="adv-wob">
-				<path
-					d="M50 15c-6-9-16-12-26-9-6 2-10 6-13 9 3 3 7 7 13 9 10 3 20 0 26-9Z"
-					fill="none"
-					stroke="#f8f1e0"
-					strokeWidth="2.4"
-					strokeLinejoin="round"
-				/>
-				<path d="M11 15 2 8v14l9-7Z" fill="none" stroke="#f8f1e0" strokeWidth="2.4" strokeLinejoin="round" />
-				<circle cx="40" cy="12" r="2" fill="#f8f1e0" />
-			</svg>
-		</div>
+			<g className="is-line" fill="none" stroke="#7ce0d3" strokeWidth="1">
+				<path d="M120 120 210 96l74 62-58 74-98-34Z" />
+				<path d="M860 180l96-44 72 66-60 78-92-36Z" />
+				<path d="M640 470l70-36 66 42" />
+			</g>
+			<g fill="#e8c46a">
+				<circle cx="120" cy="120" r="1.8" />
+				<circle cx="210" cy="96" r="1.5" />
+				<circle cx="284" cy="158" r="1.7" />
+				<circle cx="226" cy="232" r="1.4" />
+				<circle cx="128" cy="198" r="1.6" />
+				<circle cx="956" cy="136" r="1.6" />
+				<circle cx="1028" cy="202" r="1.5" />
+				<circle cx="968" cy="280" r="1.7" />
+				<circle cx="876" cy="244" r="1.4" />
+				<circle cx="640" cy="470" r="1.5" />
+				<circle cx="710" cy="434" r="1.3" />
+				<circle cx="776" cy="476" r="1.5" />
+			</g>
+		</svg>
 	)
 }
