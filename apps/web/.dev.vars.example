@@ -1,2 +1,6 @@
 DSH_API_URL=http://127.0.0.1:8080
 DSH_API_TOKEN=local-dev-token
+# Google OAuth (Google Cloud Console → Credentials → OAuth client, redirect
+# URI <origin>/api/auth/google/callback). Leave empty to hide Google login.
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=

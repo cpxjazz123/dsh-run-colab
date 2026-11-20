@@ -50,6 +50,9 @@ Browser ──▶ dsh-agent-web      apps/web          panel UI, /api/dsh proxy
   the login QR code.
 - **Public image URLs** — generated images are served at unguessable UUID
   paths through the API Worker.
+- **Accounts** — the panel is gated by a session cookie. Register with email
+  and password, or sign in with Google; users and sessions live in a D1
+  database bound as `AUTH_DB`. `/api/dsh/*` returns `401` without a session.
 
 ## Requirements
 
@@ -74,6 +77,19 @@ Fill the provider and Colab credentials in `apps/colab-bridge/.dev.vars`, and
 keep `DSH_BRIDGE_TOKEN` identical across the three files (the examples use
 `local-dev-token`).
 
+Apply the account schema to the local D1 database once, and again whenever a
+migration is added:
+
+```bash
+pnpm --filter @dsh-agent/web exec wrangler d1 migrations apply AUTH_DB --local
+```
+
+Google login needs an OAuth client (Google Cloud Console → Credentials →
+OAuth client ID, redirect URI `http://localhost:3000/api/auth/google/callback`).
+Put its id and secret in `apps/web/.dev.vars` as `GOOGLE_CLIENT_ID` and
+`GOOGLE_CLIENT_SECRET`. Leave them empty to use email and password only; the
+Google button then redirects back with `?error=google_unconfigured`.
+
 Run the three Workers in three terminals, in this order:
 
 ```bash
@@ -86,7 +102,8 @@ Docker must be running for `dev:colab`; the first build pulls the image. The
 API Worker resolves `dsh-colab-bridge` through the wrangler dev registry, so
 that Worker has to be running before the panel can show state.
 
-Open <http://localhost:3000>. The panel reaches the API at
+Open <http://localhost:3000>; the panel redirects to `/login` until you
+register an account or sign in with Google. The panel reaches the API at
 `http://127.0.0.1:8080` (from `apps/web/.dev.vars`), and the API reaches the
 container Worker through its service binding.
 
@@ -144,20 +161,37 @@ pnpm --filter @dsh-agent/colab-bridge exec wrangler deploy \
   --var DSH_PUBLIC_URL:https://<api-worker>.workers.dev
 ```
 
-4. `dsh-agent-web` — same token, then deploy.
+4. `dsh-agent-web` — same token, the auth database, then deploy.
 
 ```bash
+# once: copy the printed database_id into apps/web/wrangler.jsonc
+pnpm --filter @dsh-agent/web exec wrangler d1 create dsh-auth
+pnpm --filter @dsh-agent/web exec wrangler d1 migrations apply AUTH_DB --remote
 pnpm --filter @dsh-agent/web exec wrangler secret put DSH_API_TOKEN
+pnpm --filter @dsh-agent/web exec wrangler secret put GOOGLE_CLIENT_ID
+pnpm --filter @dsh-agent/web exec wrangler secret put GOOGLE_CLIENT_SECRET
 pnpm --filter @dsh-agent/web deploy
 ```
+
+The Google OAuth client for the deployed host needs the redirect URI
+`https://<panel-worker>/api/auth/google/callback`.
 
 ## Security
 
 This is a **single-tenant** stack. One container owns one Colab session and
-one config file. Do not expose it to unrelated users. The panel has no login
-of its own; put Cloudflare Access or another authentication layer in front of
-`dsh-agent-api` (and the panel Worker) before using a public hostname.
-Generated images are public by UUID. The container filesystem is ephemeral:
+one config file. The panel requires a session: pages redirect to `/login` and
+`/api/dsh/*` answers `401` without one. Passwords are PBKDF2-SHA256 (210k
+iterations); sessions are 30-day `HttpOnly`, `SameSite=Lax` cookies whose
+database rows store only the SHA-256 of the token.
+
+**Registration is open**: anyone who can reach the panel hostname can create
+an account and control the container. Restrict the hostname (Cloudflare
+Access, a private network) if that is not what you want.
+
+The Agent UI and generated images are served by `dsh-agent-api`, outside the
+panel's session gate: the DSH web server enforces its own token, and image
+URLs are public by UUID. Put an authentication layer in front of the API
+origin before using a public hostname. The container filesystem is ephemeral:
 config and snapshot cache are lost when the container is replaced.
 
 `dsh-colab-bridge` is deployed with `workers_dev: false`; it must stay
@@ -167,6 +201,7 @@ reachable only through the API Worker's service binding.
 
 ```
 apps/web/           dsh-agent-web: TanStack Start UI and /api/dsh proxy
+apps/web/migrations D1 schema for accounts and sessions
 apps/api/           dsh-agent-api: public edge, bearer auth, routing
 apps/colab-bridge/  dsh-colab-bridge: Worker, Docker container, bridge script
 apps/mcp/           MCP stdio server over the control API

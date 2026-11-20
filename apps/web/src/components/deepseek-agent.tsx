@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import type { DshIdentity } from '@dsh-agent/contract'
 import { dshQqbotStateSchema, dshStateSchema } from '@dsh-agent/contract'
+import { AccountBar } from './account'
 import { ErrorNotice, Field } from './common'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -559,7 +560,8 @@ export function DeepSeekAgent() {
 				<ErrorNotice error={saveIdentity.error} />
 				<ErrorNotice error={deleteAgent.error} />
 
-				<div className="flex flex-wrap items-center justify-end gap-3 border-t border-dashed border-ink/10 pt-4">
+				<div className="flex flex-wrap items-center justify-between gap-3 border-t border-dashed border-ink/10 pt-4">
+					<AccountBar />
 					<Button
 						type="button"
 						variant="ghost"
