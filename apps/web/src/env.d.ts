@@ -1,6 +1,6 @@
-// Local development overrides; production reaches the bridge through the
-// DSH_BRIDGE service binding instead.
+// Local development overrides; production reaches the backend through the
+// DSH_API service binding instead.
 interface Env {
-	DSH_BRIDGE_URL?: string
-	DSH_BRIDGE_TOKEN?: string
+	DSH_API_URL?: string
+	DSH_API_TOKEN?: string
 }

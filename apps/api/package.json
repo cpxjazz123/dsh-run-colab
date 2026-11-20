@@ -1,0 +1,16 @@
+{
+	"name": "@dsh-agent/api",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "wrangler dev --port 8080",
+		"deploy": "wrangler deploy",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^5.20261007.1",
+		"typescript": "^5.9.2",
+		"wrangler": "^4.141.0"
+	}
+}

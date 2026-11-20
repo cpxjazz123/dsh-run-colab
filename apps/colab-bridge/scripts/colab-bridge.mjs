@@ -168,6 +168,9 @@ function loadConfig() {
       driveFileId:
         typeof parsed.driveFileId === 'string' ? parsed.driveFileId : '',
       token: typeof parsed.token === 'string' ? parsed.token : '',
+      // Enabled unless explicitly turned off, so existing profiles keep the
+      // image MCP tool after upgrading.
+      imageGeneration: parsed.imageGeneration !== false,
     }
   } catch {
     return {
@@ -179,6 +182,7 @@ function loadConfig() {
       snapshot: false,
       driveFileId: '',
       token: '',
+      imageGeneration: true,
     }
   }
 }
@@ -230,8 +234,7 @@ function colabRunAsync(args, timeout = 120_000, input) {
   })
 }
 
-function colabStatus() {
-  const result = colabRun(['status', '-s', SESSION], 30_000)
+function parseColabStatus(result) {
   const text = `${result.stdout || ''}${result.stderr || ''}`.trim()
   if (result.status !== 0 || !/Hardware:/i.test(text)) {
     return { found: false, text }
@@ -239,6 +242,39 @@ function colabStatus() {
   const hardware = /Hardware:\s*([^|\n]+)/i.exec(text)?.[1]?.trim() ?? 'unknown'
   const status = /Status:\s*([^|\n]+)/i.exec(text)?.[1]?.trim() ?? 'unknown'
   return { found: true, hardware, status, text }
+}
+
+function colabStatus() {
+  return parseColabStatus(colabRun(['status', '-s', SESSION], 30_000))
+}
+
+// `/state` is polled every few seconds. Reading the CLI with spawnSync parks
+// the whole event loop for the ~3s the call takes, which starves the tunnel
+// proxy and every other request, so the poll reads it off-process and reuses a
+// very recent answer.
+const STATUS_TTL_MS = 4_000
+let statusCache = { at: 0, value: null }
+let statusPending = null
+
+function invalidateStatus() {
+  statusCache = { at: 0, value: null }
+}
+
+async function colabStatusCached() {
+  if (statusCache.value && Date.now() - statusCache.at < STATUS_TTL_MS)
+    return statusCache.value
+  statusPending ??= colabRunAsync(['status', '-s', SESSION], 30_000)
+    .then(parseColabStatus)
+    .catch((error) => ({
+      found: false,
+      text: error instanceof Error ? error.message : String(error),
+    }))
+    .finally(() => {
+      statusPending = null
+    })
+  const value = await statusPending
+  statusCache = { at: Date.now(), value }
+  return value
 }
 
 function ensureSession() {
@@ -984,7 +1020,7 @@ function startScript() {
       config:
         text: ${yamlJson(personaSectionText())}
 `
-  const imageMcp = MCP_BRIDGE_URL
+  const imageMcp = MCP_BRIDGE_URL && config.imageGeneration
     ? `- insert:
     - id: mcp-image
       name: '@deepseek-ai/dsh-mcp-client'
@@ -1092,7 +1128,7 @@ pkill -f 'dsh web' 2>/dev/null || true`
 }
 
 async function state() {
-  const session = colabStatus()
+  const session = await colabStatusCached()
   const portOpen = await waitForPort(TUNNEL_PORT, 300)
   const running = portOpen ? await probeHttp(TUNNEL_PORT) : false
   return {
@@ -1110,6 +1146,7 @@ async function state() {
     baseUrl: config.baseUrl,
     model: config.model,
     identity: config.identity,
+    imageGeneration: config.imageGeneration,
     url: portOpen
       ? `${PUBLIC_URL || `http://127.0.0.1:${TUNNEL_PORT}`}/${config.token ? `?token=${encodeURIComponent(config.token)}` : ''}`
       : null,
@@ -1396,6 +1433,7 @@ async function install() {
 async function start() {
   stopTunnel()
   ensureSession()
+  invalidateStatus()
   let output = await waitForRemoteDsh(3000)
   let restored = ''
   if (!output.includes(DSH_VERSION)) {
@@ -1427,6 +1465,7 @@ async function start() {
 
 async function stop() {
   stopTunnel()
+  invalidateStatus()
   let output = ''
   try {
     output = sshExec(stopScript())
@@ -1441,6 +1480,7 @@ async function stop() {
 async function stopSession() {
   stopTunnel()
   const result = colabRun(['stop', '-s', SESSION], 120_000)
+  invalidateStatus()
   config.token = ''
   saveConfig()
   return {
@@ -1586,6 +1626,8 @@ const server = http.createServer(async (req, res) => {
       if (typeof body.model === 'string' && body.model.trim())
         config.model = body.model.trim()
       updateIdentity(body)
+      if (typeof body.imageGeneration === 'boolean')
+        config.imageGeneration = body.imageGeneration
       saveConfig()
       return send(res, 200, await start())
     }
@@ -1603,6 +1645,8 @@ const server = http.createServer(async (req, res) => {
       if (typeof body.model === 'string' && body.model.trim())
         config.model = body.model.trim()
       updateIdentity(body)
+      if (typeof body.imageGeneration === 'boolean')
+        config.imageGeneration = body.imageGeneration
       saveConfig()
       return send(res, 200, await state())
     }

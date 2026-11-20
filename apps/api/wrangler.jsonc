@@ -1,0 +1,23 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "dsh-agent-api",
+	// Public edge: the panel Worker calls it, and the browser reaches the Agent
+	// UI and generated images through it. The container lives in dsh-colab-bridge.
+	"workers_dev": true,
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-02",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true,
+		"traces": { "enabled": true }
+	},
+	"secrets": {
+		"required": ["DSH_BRIDGE_TOKEN"]
+	},
+	"services": [
+		{
+			"binding": "DSH_COLAB_BRIDGE",
+			"service": "dsh-colab-bridge"
+		}
+	]
+}

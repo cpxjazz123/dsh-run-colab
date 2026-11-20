@@ -7,7 +7,8 @@ export const Route = createRootRoute({
 		meta: [
 			{ charSet: 'utf-8' },
 			{ name: 'viewport', content: 'width=device-width, initial-scale=1' },
-			{ title: 'DSH Agent' },
+			{ title: '大肥鱼 · DSH Agent' },
+			{ name: 'theme-color', content: '#e8f1ff' },
 		],
 		links: [{ rel: 'stylesheet', href: appCss }],
 	}),

@@ -1,7 +1,9 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "dsh-agent-bridge",
-	"workers_dev": true,
+	"name": "dsh-colab-bridge",
+	// Reached only through the dsh-agent-api service binding; the API worker is
+	// the public origin for the panel, the Agent UI, and generated images.
+	"workers_dev": false,
 	"main": "src/index.ts",
 	"compatibility_date": "2026-10-02",
 	"compatibility_flags": ["nodejs_compat"],
@@ -10,8 +12,8 @@
 		"traces": { "enabled": true }
 	},
 	"vars": {
-		// Set this to the public origin of the deployed Worker so the DSH
-		// Web UI and generated image links use the same host.
+		// Set this to the public origin of the dsh-agent-api Worker so the DSH
+		// Web UI and generated image links use the origin the browser reached.
 		"DSH_PUBLIC_URL": ""
 	},
 	"secrets": {

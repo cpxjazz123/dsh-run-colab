@@ -1,5 +1,5 @@
 {
-	"name": "@dsh-agent/bridge",
+	"name": "@dsh-agent/colab-bridge",
 	"private": true,
 	"type": "module",
 	"scripts": {

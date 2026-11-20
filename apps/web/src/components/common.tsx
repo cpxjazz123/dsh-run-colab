@@ -18,9 +18,9 @@ export function ErrorNotice({ error }: { error: unknown }) {
 	return error ? (
 		<div
 			role="alert"
-			className="my-4 flex gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm"
+			className="flex gap-3 rounded-2xl border-2 border-destructive/25 bg-destructive/5 p-4 text-sm text-ink"
 		>
-			<AlertCircle className="size-5 shrink-0" />
+			<AlertCircle className="size-5 shrink-0 text-destructive" />
 			{describe(error)}
 		</div>
 	) : null
@@ -38,10 +38,15 @@ export function Field({
 	children: React.ReactNode
 }) {
 	return (
-		<div className="space-y-2">
-			<Label htmlFor={id}>{label}</Label>
+		<div className="space-y-1.5">
+			<Label
+				htmlFor={id}
+				className="text-xs font-bold tracking-wide text-muted-foreground uppercase"
+			>
+				{label}
+			</Label>
 			{children}
-			{hint && <p className="text-sm text-muted-foreground">{hint}</p>}
+			{hint && <p className="text-xs text-muted-foreground">{hint}</p>}
 		</div>
 	)
 }

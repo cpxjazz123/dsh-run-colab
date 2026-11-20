@@ -7,14 +7,19 @@ export const Route = createFileRoute('/')({
 
 function AgentPage() {
 	return (
-		<main className="mx-auto min-h-dvh max-w-5xl px-4 py-8 sm:px-6">
-			<header className="mb-6 space-y-1">
-				<h1 className="text-2xl font-semibold tracking-tight">DSH Agent</h1>
-				<p className="text-sm text-muted-foreground">
-					DeepSeek Harness on Colab, with optional image generation and QQ Bot.
+		<main className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col justify-center gap-6 px-4 py-10">
+			<header className="text-center">
+				<p className="text-[11px] font-black tracking-[0.35em] text-whale uppercase">
+					DeepSeek Harness
 				</p>
+				<h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">
+					大肥鱼 Agent
+				</h1>
 			</header>
 			<DeepSeekAgent />
+			<p className="text-center text-xs text-muted-foreground">
+				Cloudflare Workers · Google Colab · 云端的大肥鱼
+			</p>
 		</main>
 	)
 }

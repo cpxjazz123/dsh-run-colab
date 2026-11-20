@@ -7,8 +7,8 @@
 	"main": "@tanstack/react-start/server-entry",
 	"services": [
 		{
-			"binding": "DSH_BRIDGE",
-			"service": "dsh-agent-bridge"
+			"binding": "DSH_API",
+			"service": "dsh-agent-api"
 		}
 	]
 }

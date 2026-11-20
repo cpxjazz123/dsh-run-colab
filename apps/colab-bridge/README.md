@@ -1,12 +1,16 @@
-# `@dsh-agent/bridge`
+# `@dsh-agent/colab-bridge`
 
-Cloudflare Worker and container wrapper around the DSH bridge. The container
-runs the same `scripts/colab-bridge.mjs` as the standalone process, so the
-Colab CLI, SSH tunnel, snapshot cache, and DSH startup behave identically.
+Cloudflare Worker and container that owns the Colab runtime. The container
+runs `scripts/colab-bridge.mjs`, so the Colab CLI, SSH tunnel, snapshot cache,
+and DSH startup behave the same locally and on Workers.
+
+This Worker is deployed with `workers_dev: false` and no route: the only
+caller is the `dsh-agent-api` Worker through the `DSH_COLAB_BRIDGE` service
+binding. That keeps provider and Colab secrets off the public edge.
 
 ## Endpoints
 
-Authenticated with `Authorization: Bearer <DSH_BRIDGE_TOKEN>`:
+Control endpoints, authenticated with `Authorization: Bearer <DSH_BRIDGE_TOKEN>`:
 
 - `/state`, `/install`, `/start`, `/stop`, `/session/stop`, `/config`
 - `/generate`, `/generate/<job>`
@@ -18,12 +22,21 @@ Public by design:
 - `/health` — liveness probe.
 - `/` — DSH Web UI, proxied to container port `18080`.
 
+The API Worker re-checks the bearer token before forwarding control paths, and
+publishes `/`, `/images/*`, and the control paths on its own origin.
+
 ## Image generation
 
 The bridge starts an `image` MCP server on the Colab VM. It exposes
 `mcp__image__generate_image`; the tool submits a job to `/generate`, polls it,
 and returns the JPEG plus a public image URL. The GPU session is separate from
 the CPU `dsh` session.
+
+The MCP entry is written into the DSH patch only when the stored
+`imageGeneration` flag is true (default). Toggle it from the panel switch,
+`POST /config {"imageGeneration": false}`, or `dsh_configure` over MCP; it is
+applied on the next `start`, and when it is off the agent has no image tool, so
+no GPU session is ever started from chat.
 
 The GPU session runs `image-worker.py` as a persistent loopback HTTP worker.
 It loads `stabilityai/sdxl-turbo` into VRAM once and keeps the process alive,
@@ -55,11 +68,10 @@ the profile patch and DSH's HMR reload starts the gateway in place.
 
 ## Local development
 
-Docker must be running.
+Docker must be running. From the repository root:
 
 ```bash
-cd apps/bridge
-pnpm dev
+pnpm dev:colab   # wrangler dev --port 7791, builds and runs the container
 ```
 
 Create `.dev.vars` from `.dev.vars.example`:
@@ -71,22 +83,22 @@ DEEPSEEK_BASE_URL=https://api.commandcode.ai/provider/v1
 DEEPSEEK_MODEL=deepseek/deepseek-v4.1-flash
 COLAB_OAUTH_TOKEN=<Colab OAuth JSON>
 GOOGLE_CLOUD_PROJECT=<Drive quota project>
-DSH_PUBLIC_URL=http://127.0.0.1:7791
+DSH_PUBLIC_URL=http://127.0.0.1:8080
 ```
 
 `COLAB_OAUTH_TOKEN` is materialized as `oauth-token.json` for the bridge and
 as the Colab CLI's legacy token file. The container generates an SSH key on
 start; the first `colab ssh` registers it with the session.
 
-Test the control API:
+Test the control API directly:
 
 ```bash
 curl -H "Authorization: Bearer $DSH_BRIDGE_TOKEN" \
   http://127.0.0.1:7791/state
 ```
 
-The container publishes the bridge on `7791` and the DSH Web UI on `18080`
-inside the container; the Worker routes by path.
+The Worker serves `7791`; the container publishes the DSH Web UI on `18080`
+and the Worker routes non-control paths there.
 
 ## Deploy
 
@@ -94,6 +106,11 @@ Required Worker secrets: `DSH_BRIDGE_TOKEN`, `DEEPSEEK_API_KEY`,
 `DEEPSEEK_BASE_URL`, `DEEPSEEK_MODEL`, `COLAB_OAUTH_TOKEN`,
 `GOOGLE_CLOUD_PROJECT`.
 
-Set `DSH_PUBLIC_URL` to the public bridge origin so the DSH Web UI and image
-links resolve. The web app binds to this Worker with the service binding
-`DSH_BRIDGE` and must use the same `DSH_BRIDGE_TOKEN`.
+Deploy it before `dsh-agent-api`, which binds to the name `dsh-colab-bridge`.
+Set `DSH_PUBLIC_URL` to the API Worker origin so the DSH Web UI and image
+links resolve to the host the browser reached:
+
+```bash
+pnpm --filter @dsh-agent/colab-bridge exec wrangler deploy \
+  --var DSH_PUBLIC_URL:https://<api-worker>.workers.dev
+```

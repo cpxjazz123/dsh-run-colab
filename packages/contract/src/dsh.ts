@@ -24,6 +24,9 @@ export const dshStateSchema = z.object({
   hasKey: z.boolean(),
   baseUrl: z.string(),
   model: z.string(),
+  // Whether the agent gets the image MCP tool, so it can start the Colab GPU
+  // session from a chat message.
+  imageGeneration: z.boolean().default(true),
   identity: dshIdentitySchema.default({
     name: "DeepSeek Agent",
     persona: "",

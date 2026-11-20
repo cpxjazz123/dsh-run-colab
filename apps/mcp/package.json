@@ -1,0 +1,23 @@
+{
+	"name": "@dsh-agent/mcp",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"description": "MCP server for the DSH Agent bridge control API",
+	"bin": {
+		"dsh-mcp": "dist/index.js"
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"start": "node dist/index.js",
+		"typecheck": "tsc --noEmit -p tsconfig.json"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.32.2",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@types/node": "^24.10.0",
+		"typescript": "^5.9.2"
+	}
+}
