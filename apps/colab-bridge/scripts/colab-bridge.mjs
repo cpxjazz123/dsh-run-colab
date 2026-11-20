@@ -1066,7 +1066,7 @@ function memoryText() {
       lines.push('## 近期记忆')
       for (const m of short) lines.push('- ' + m.text)
     }
-    memoryCache = { mtime, text: lines.join('\n') }
+    memoryCache = { mtime, text: lines.join('\\n') }
     return memoryCache.text
   } catch {
     return ''
