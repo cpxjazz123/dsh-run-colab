@@ -24,6 +24,8 @@ export const OAUTH_STATE_COOKIE = 'dsh_oauth_state'
 export const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60
 
 const PBKDF2_ITERATIONS = 210_000
+// Workers WebCrypto rejects PBKDF2 iteration counts above 100,000, so that is
+// the platform maximum rather than a security preference.
 const OAUTH_STATE_TTL_SECONDS = 10 * 60
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PASSWORD_MIN_LENGTH = 8
@@ -278,7 +280,8 @@ export async function createPasswordUser(
 			)
 			.bind(user.id, email, name, await hashPassword(password), Date.now())
 			.run()
-	} catch {
+	} catch (error) {
+		console.error('createPasswordUser failed', error)
 		return null
 	}
 	return user

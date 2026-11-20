@@ -141,16 +141,19 @@ pnpm --filter @dsh-agent/colab-bridge exec wrangler secret put DEEPSEEK_API_KEY
 pnpm --filter @dsh-agent/colab-bridge exec wrangler secret put DEEPSEEK_BASE_URL
 pnpm --filter @dsh-agent/colab-bridge exec wrangler secret put DEEPSEEK_MODEL
 pnpm --filter @dsh-agent/colab-bridge exec wrangler secret put COLAB_OAUTH_TOKEN
-pnpm --filter @dsh-agent/colab-bridge exec wrangler secret put GOOGLE_CLOUD_PROJECT
-pnpm --filter @dsh-agent/colab-bridge deploy
+pnpm --filter @dsh-agent/colab-bridge exec wrangler deploy
 ```
+
+`GOOGLE_CLOUD_PROJECT` is optional and only needed for the Drive snapshot
+cache; set it with `wrangler secret put` to a project with the Drive API
+enabled, then redeploy.
 
 2. `dsh-agent-api` — same bridge token, then deploy. Its
    `DSH_COLAB_BRIDGE` binding finds the Worker by name.
 
 ```bash
 pnpm --filter @dsh-agent/api exec wrangler secret put DSH_BRIDGE_TOKEN
-pnpm --filter @dsh-agent/api deploy
+pnpm --filter @dsh-agent/api exec wrangler deploy
 ```
 
 3. Point the container Worker at the API origin, so the Agent UI link and
@@ -170,7 +173,7 @@ pnpm --filter @dsh-agent/web exec wrangler d1 migrations apply AUTH_DB --remote
 pnpm --filter @dsh-agent/web exec wrangler secret put DSH_API_TOKEN
 pnpm --filter @dsh-agent/web exec wrangler secret put GOOGLE_CLIENT_ID
 pnpm --filter @dsh-agent/web exec wrangler secret put GOOGLE_CLIENT_SECRET
-pnpm --filter @dsh-agent/web deploy
+pnpm --filter @dsh-agent/web run deploy
 ```
 
 The Google OAuth client for the deployed host needs the redirect URI
@@ -180,7 +183,7 @@ The Google OAuth client for the deployed host needs the redirect URI
 
 This is a **single-tenant** stack. One container owns one Colab session and
 one config file. The panel requires a session: pages redirect to `/login` and
-`/api/dsh/*` answers `401` without one. Passwords are PBKDF2-SHA256 (210k
+`/api/dsh/*` answers `401` without one. Passwords are PBKDF2-SHA256 (100k
 iterations); sessions are 30-day `HttpOnly`, `SameSite=Lax` cookies whose
 database rows store only the SHA-256 of the token.
 
