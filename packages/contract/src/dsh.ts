@@ -1,14 +1,59 @@
 import { z } from "zod";
 
+// World setting, in the same outline as the anify world documents. Every
+// field is optional so a half-filled template still saves.
+export const dshWorldSchema = z.object({
+  name: z.string().max(80).default(""),
+  summary: z.string().max(2000).default(""),
+  era: z.string().max(2000).default(""),
+  geography: z.string().max(4000).default(""),
+  factions: z.string().max(4000).default(""),
+  rules: z.string().max(4000).default(""),
+  arc: z.string().max(4000).default(""),
+});
+export type DshWorld = z.infer<typeof dshWorldSchema>;
+
+// One inhabitant of that world. The fields mirror the anify character sheets:
+// identity, appearance, temperament, voice, ties, and what they hide.
+export const dshWorldCharacterSchema = z.object({
+  name: z.string().max(80).default(""),
+  role: z.string().max(200).default(""),
+  appearance: z.string().max(1000).default(""),
+  personality: z.string().max(1000).default(""),
+  speech: z.string().max(1000).default(""),
+  relations: z.string().max(1000).default(""),
+  secret: z.string().max(1000).default(""),
+});
+export type DshWorldCharacter = z.infer<typeof dshWorldCharacterSchema>;
+
+export const EMPTY_WORLD: DshWorld = {
+  name: "",
+  summary: "",
+  era: "",
+  geography: "",
+  factions: "",
+  rules: "",
+  arc: "",
+};
+
+export const EMPTY_WORLD_CHARACTER: DshWorldCharacter = {
+  name: "",
+  role: "",
+  appearance: "",
+  personality: "",
+  speech: "",
+  relations: "",
+  secret: "",
+};
+
 export const dshIdentitySchema = z.object({
   name: z.string().min(1).max(80),
   persona: z.string().max(4000),
   personality: z.string().max(2000),
   communicationStyle: z.string().max(1000),
   instructions: z.string().max(8000),
-  // Free-form world setting, written in the same outline style as the anify
-  // world documents: era, places, factions, characters, rules, main arc.
-  worldview: z.string().max(20000).default(""),
+  world: dshWorldSchema.default(EMPTY_WORLD),
+  characters: z.array(dshWorldCharacterSchema).max(20).default([]),
 });
 export type DshIdentity = z.infer<typeof dshIdentitySchema>;
 
@@ -36,7 +81,8 @@ export const dshStateSchema = z.object({
     personality: "",
     communicationStyle: "",
     instructions: "",
-    worldview: "",
+    world: EMPTY_WORLD,
+    characters: [],
   }),
   url: z.string().nullable(),
 });

@@ -47,7 +47,16 @@ const DEFAULT_IDENTITY = {
   personality: '',
   communicationStyle: '',
   instructions: '',
-  worldview: '',
+  world: {
+    name: '',
+    summary: '',
+    era: '',
+    geography: '',
+    factions: '',
+    rules: '',
+    arc: '',
+  },
+  characters: [],
 }
 const PROVIDER_ID = 'commandcode'
 const DSH_VERSION = '0.2.2-rc.1'
@@ -126,27 +135,94 @@ function normalizeIdentity(value) {
     personality: text('personality'),
     communicationStyle: text('communicationStyle'),
     instructions: text('instructions'),
-    worldview: text('worldview'),
+    world: normalizeWorld(source.world),
+    characters: normalizeCharacters(source.characters),
   }
 }
 
+function normalizeWorld(value) {
+  const source = typeof value === 'object' && value !== null ? value : {}
+  const text = (key) =>
+    typeof source[key] === 'string' ? source[key].trim() : ''
+  return {
+    name: text('name'),
+    summary: text('summary'),
+    era: text('era'),
+    geography: text('geography'),
+    factions: text('factions'),
+    rules: text('rules'),
+    arc: text('arc'),
+  }
+}
+
+function normalizeCharacters(value) {
+  if (!Array.isArray(value)) return []
+  return value
+    .filter((item) => typeof item === 'object' && item !== null)
+    .slice(0, 20)
+    .map((item) => {
+      const text = (key) =>
+        typeof item[key] === 'string' ? item[key].trim() : ''
+      return {
+        name: text('name'),
+        role: text('role'),
+        appearance: text('appearance'),
+        personality: text('personality'),
+        speech: text('speech'),
+        relations: text('relations'),
+        secret: text('secret'),
+      }
+    })
+}
+
+const IDENTITY_LIMITS = {
+  name: 80,
+  persona: 4000,
+  personality: 2000,
+  communicationStyle: 1000,
+  instructions: 8000,
+}
+const WORLD_LIMITS = {
+  name: 80,
+  summary: 2000,
+  era: 2000,
+  geography: 4000,
+  factions: 4000,
+  rules: 4000,
+  arc: 4000,
+}
+const CHARACTER_LIMITS = {
+  name: 80,
+  role: 200,
+  appearance: 1000,
+  personality: 1000,
+  speech: 1000,
+  relations: 1000,
+  secret: 1000,
+}
+
+function assertIdentityText(value, label, limit) {
+  if (value.length > limit)
+    throw new Error(`Agent identity field ${label} is too long`)
+  if (value.includes('{{'))
+    throw new Error(
+      `Agent identity field ${label} cannot contain {{…}} template expressions`,
+    )
+}
+
 function validateIdentity(identity) {
-  const limits = {
-    name: 80,
-    persona: 4000,
-    personality: 2000,
-    communicationStyle: 1000,
-    instructions: 8000,
-    worldview: 20000,
-  }
-  for (const [key, limit] of Object.entries(limits)) {
-    if (identity[key].length > limit)
-      throw new Error(`Agent identity field ${key} is too long`)
-    if (identity[key].includes('{{'))
-      throw new Error(
-        `Agent identity field ${key} cannot contain {{…}} template expressions`,
-      )
-  }
+  for (const [key, limit] of Object.entries(IDENTITY_LIMITS))
+    assertIdentityText(identity[key], key, limit)
+  for (const [key, limit] of Object.entries(WORLD_LIMITS))
+    assertIdentityText(identity.world[key], `world.${key}`, limit)
+  if (identity.characters.length > 20)
+    throw new Error('Agent world has too many characters')
+  identity.characters.forEach((character, index) => {
+    for (const [key, limit] of Object.entries(CHARACTER_LIMITS))
+      assertIdentityText(character[key], `characters[${index}].${key}`, limit)
+  })
+  if (renderWorldSetting(identity).length > 30000)
+    throw new Error('Agent world setting is too long')
 }
 
 function loadConfig() {
@@ -845,6 +921,45 @@ function yamlJson(value) {
   return JSON.stringify(value)
 }
 
+function renderWorldSetting(identity) {
+  const world = identity.world
+  const characters = identity.characters.filter(
+    (character) => character.name || character.role,
+  )
+  const hasWorld = Object.values(world).some(Boolean)
+  if (!hasWorld && characters.length === 0) return ''
+  const lines = []
+  if (world.name) lines.push(`# ${world.name}`)
+  if (world.summary) lines.push(world.summary)
+  const section = (title, value) => {
+    if (value) lines.push(`## ${title}\n${value}`)
+  }
+  section('纪元', world.era)
+  section('界域与地理', world.geography)
+  section('势力', world.factions)
+  section('规则与禁忌', world.rules)
+  section('当前主线', world.arc)
+  if (characters.length) {
+    lines.push('## 人物')
+    for (const character of characters) {
+      lines.push(
+        `### ${character.name || '未命名'}${
+          character.role ? ` — ${character.role}` : ''
+        }`,
+      )
+      const field = (label, value) => {
+        if (value) lines.push(`- ${label}：${value}`)
+      }
+      field('外貌', character.appearance)
+      field('性格', character.personality)
+      field('说话方式', character.speech)
+      field('关系', character.relations)
+      field('秘密', character.secret)
+    }
+  }
+  return lines.join('\n')
+}
+
 function identityPrefix() {
   const identity = config.identity
   const name = identity.name.replace(/\s+/g, ' ')
@@ -856,8 +971,8 @@ function identityPrefix() {
   if (identity.personality) parts.push(`Personality:\n${identity.personality}`)
   if (identity.communicationStyle)
     parts.push(`Communication style:\n${identity.communicationStyle}`)
-  if (identity.worldview)
-    parts.push(`World setting:\n${identity.worldview}`)
+  const world = renderWorldSetting(identity)
+  if (world) parts.push(`World setting:\n${world}`)
   if (MCP_BRIDGE_URL) {
     parts.push(
       'When the user asks for an image, call the mcp__image__generate_image tool and include the returned image or link in your reply.',
@@ -880,8 +995,8 @@ function personaSectionText() {
   if (identity.personality) parts.push(`Personality:\n${identity.personality}`)
   if (identity.communicationStyle)
     parts.push(`Communication style:\n${identity.communicationStyle}`)
-  if (identity.worldview)
-    parts.push(`World setting:\n${identity.worldview}`)
+  const world = renderWorldSetting(identity)
+  if (world) parts.push(`World setting:\n${world}`)
   if (identity.instructions)
     parts.push(`Additional user configuration:\n${identity.instructions}`)
   return parts.join('\n\n')
