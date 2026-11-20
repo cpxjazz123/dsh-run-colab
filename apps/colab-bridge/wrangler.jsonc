@@ -25,6 +25,14 @@
 			"COLAB_OAUTH_TOKEN"
 		]
 	},
+	// User settings survive container recreation: the Worker mirrors every
+	// /config and /start body here, and seeds the container with it on boot.
+	"kv_namespaces": [
+		{
+			"binding": "CONFIG_KV",
+			"id": "7bd11dee8ba04d9c875d1fd71eba5a22"
+		}
+	],
 	"containers": [
 		{
 			"class_name": "DshBridgeContainer",

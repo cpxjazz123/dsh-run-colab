@@ -45,7 +45,9 @@ Browser ──▶ dsh-agent-web      apps/web          panel UI, /api/dsh proxy
   arc — plus one character card per inhabitant (role, appearance, personality,
   voice, ties, secret). The bridge writes it to `dsh-persona.txt` and the
   persona plugin re-reads that file for every prompt assembly, so saving in the
-  panel takes effect on the next turn without restarting the agent.
+  panel takes effect on the next turn without restarting the agent. The Worker
+  also mirrors every save into a KV namespace and seeds the container with it
+  on boot, so replacing the container no longer drops the settings.
 - **Snapshot cache** — uploads a Node 24 snapshot to Google Drive and restores
   it on later starts.
 - **Image generation** — a persistent `sdxl-turbo` worker on a separate GPU
@@ -139,7 +141,14 @@ It speaks MCP over stdio and defaults to `http://127.0.0.1:8080`. See
 
 Deploy in dependency order: container Worker, API Worker, panel Worker.
 
-1. `dsh-colab-bridge` — secrets and the container image.
+1. `dsh-colab-bridge` — secrets, the KV namespace for settings, and the
+   container image. Create the namespace once and copy its id into
+   `apps/colab-bridge/wrangler.jsonc`:
+
+```bash
+pnpm --filter @dsh-agent/colab-bridge exec wrangler kv namespace create dsh-config
+```
+
 
 ```bash
 pnpm --filter @dsh-agent/colab-bridge exec wrangler secret put DSH_BRIDGE_TOKEN

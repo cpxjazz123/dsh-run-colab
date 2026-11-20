@@ -2,6 +2,8 @@ import { Container, switchPort } from '@cloudflare/containers'
 
 type Env = {
 	DSH_BRIDGE: DurableObjectNamespace<DshBridgeContainer>
+	/** Durable copy of the user settings, keyed `config`. */
+	CONFIG_KV: KVNamespace
 	/** Bearer token the DSH web app uses for the bridge control endpoints. */
 	DSH_BRIDGE_TOKEN: string
 	DSH_PUBLIC_URL?: string
@@ -23,6 +25,34 @@ const BRIDGE_PATHS = new Set([
 	'/qqbot',
 ])
 const INSTANCE = 'colab-bridge-v2'
+const CONFIG_KEY = 'config'
+
+/** Settings the panel owns; session state such as `token` stays in the container. */
+const CONFIG_FIELDS = ['apiKey', 'baseUrl', 'model', 'imageGeneration'] as const
+
+/**
+ * Merge a `/config` or `/start` body into the KV copy. Identity replaces the
+ * whole object because the panel always sends every field.
+ */
+async function rememberConfig(env: Env, patch: unknown): Promise<void> {
+	if (typeof patch !== 'object' || patch === null) return
+	const body = patch as Record<string, unknown>
+	try {
+		const raw = await env.CONFIG_KV.get(CONFIG_KEY)
+		const current: Record<string, unknown> = raw
+			? ((JSON.parse(raw) as Record<string, unknown>) ?? {})
+			: {}
+		const next: Record<string, unknown> = { ...current }
+		for (const key of CONFIG_FIELDS)
+			if (key in body) next[key] = body[key]
+		if (typeof body.identity === 'object' && body.identity !== null)
+			next.identity = body.identity
+		await env.CONFIG_KV.put(CONFIG_KEY, JSON.stringify(next))
+	} catch (error) {
+		// Persisting is best effort: the request still reaches the container.
+		console.error('config mirror failed', error)
+	}
+}
 
 /** Compare fixed-size digests so the token check does not leak its length. */
 async function authorized(request: Request, expected: string): Promise<boolean> {
@@ -60,11 +90,33 @@ export class DshBridgeContainer extends Container<Env> {
 	sleepAfter = '5m'
 	enableInternet = true
 
+	private bootConfig?: Promise<void>
+
 	constructor(ctx: DurableObjectState, env: Env) {
 		// The SDK types its state parameter as `DurableObjectState<{}>`; the
 		// bridge keeps its state in the container and config file.
 		super(ctx as unknown as DurableObjectState<{}>, env)
 		this.envVars = containerEnv(env)
+	}
+
+	/** Seed a fresh container with the last settings saved from the panel. */
+	private loadBootConfig(): Promise<void> {
+		this.bootConfig ??= (async () => {
+			try {
+				const raw = await this.env.CONFIG_KV.get(CONFIG_KEY)
+				if (raw) this.envVars = { ...containerEnv(this.env), DSH_BOOT_CONFIG: raw }
+			} catch (error) {
+				console.error('config load failed', error)
+			}
+		})()
+		return this.bootConfig
+	}
+
+	override async fetch(request: Request): Promise<Response> {
+		// Runs before the SDK starts the container, so envVars carries the
+		// stored settings into a brand-new instance.
+		await this.loadBootConfig()
+		return await super.fetch(request)
 	}
 
 	override onStart(): void {
@@ -85,6 +137,17 @@ export default {
 		const url = new URL(request.url)
 		if (url.pathname === '/health') {
 			return Response.json({ ok: true })
+		}
+
+		if (
+			(request.method === 'POST' && url.pathname === '/config') ||
+			(request.method === 'POST' && url.pathname === '/start')
+		) {
+			const patch = await request
+				.clone()
+				.json()
+				.catch(() => null)
+			await rememberConfig(env, patch)
 		}
 
 		const bridge = env.DSH_BRIDGE.getByName(INSTANCE)

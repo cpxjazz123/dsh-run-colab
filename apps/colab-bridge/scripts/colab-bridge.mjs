@@ -226,43 +226,44 @@ function validateIdentity(identity) {
 }
 
 function loadConfig() {
+  let parsed = {}
   try {
-    const parsed = JSON.parse(readFileSync(CONFIG_FILE, 'utf8'))
-    return {
-      apiKey:
-        typeof parsed.apiKey === 'string' && parsed.apiKey
-          ? parsed.apiKey
-          : ENV_API_KEY,
-      baseUrl:
-        typeof parsed.baseUrl === 'string' && parsed.baseUrl.trim()
-          ? parsed.baseUrl.trim()
-          : ENV_BASE_URL || DEFAULT_BASE_URL,
-      model:
-        typeof parsed.model === 'string' && parsed.model.trim()
-          ? parsed.model.trim()
-          : ENV_MODEL || DEFAULT_MODEL,
-      identity: normalizeIdentity(parsed.identity),
-      installed: parsed.installed === true,
-      snapshot: parsed.snapshot === true,
-      driveFileId:
-        typeof parsed.driveFileId === 'string' ? parsed.driveFileId : '',
-      token: typeof parsed.token === 'string' ? parsed.token : '',
-      // Enabled unless explicitly turned off, so existing profiles keep the
-      // image MCP tool after upgrading.
-      imageGeneration: parsed.imageGeneration !== false,
-    }
+    parsed = JSON.parse(readFileSync(CONFIG_FILE, 'utf8'))
   } catch {
-    return {
-      apiKey: ENV_API_KEY,
-      baseUrl: ENV_BASE_URL || DEFAULT_BASE_URL,
-      model: ENV_MODEL || DEFAULT_MODEL,
-      identity: normalizeIdentity(),
-      installed: false,
-      snapshot: false,
-      driveFileId: '',
-      token: '',
-      imageGeneration: true,
+    // A fresh container has no config file. The Worker seeds the settings the
+    // panel last saved through DSH_BOOT_CONFIG, so container recreation does
+    // not drop them.
+    const boot = (process.env.DSH_BOOT_CONFIG || '').trim()
+    if (boot) {
+      try {
+        parsed = JSON.parse(boot)
+      } catch {
+        parsed = {}
+      }
     }
+  }
+  return {
+    apiKey:
+      typeof parsed.apiKey === 'string' && parsed.apiKey
+        ? parsed.apiKey
+        : ENV_API_KEY,
+    baseUrl:
+      typeof parsed.baseUrl === 'string' && parsed.baseUrl.trim()
+        ? parsed.baseUrl.trim()
+        : ENV_BASE_URL || DEFAULT_BASE_URL,
+    model:
+      typeof parsed.model === 'string' && parsed.model.trim()
+        ? parsed.model.trim()
+        : ENV_MODEL || DEFAULT_MODEL,
+    identity: normalizeIdentity(parsed.identity),
+    installed: parsed.installed === true,
+    snapshot: parsed.snapshot === true,
+    driveFileId:
+      typeof parsed.driveFileId === 'string' ? parsed.driveFileId : '',
+    token: typeof parsed.token === 'string' ? parsed.token : '',
+    // Enabled unless explicitly turned off, so existing profiles keep the
+    // image MCP tool after upgrading.
+    imageGeneration: parsed.imageGeneration !== false,
   }
 }
 
