@@ -713,6 +713,31 @@ function sshExec(script, input) {
   return output
 }
 
+// Push the current identity to the VM so a running DSH picks it up on the next
+// prompt assembly. The persona plugin reads dsh-persona.txt each time, so this
+// needs no restart. Silent when the session is down; the next start rewrites it.
+async function syncRemotePersona() {
+  try {
+    const session = await colabStatusCached()
+    if (!session.found) return
+    const encoded = Buffer.from(personaSectionText(), 'utf8').toString('base64')
+    await colabRunAsync(
+      [
+        'ssh',
+        '-s',
+        SESSION,
+        '--',
+        'bash',
+        '-lc',
+        `mkdir -p ${DSH_HOME} && echo '${encoded}' | base64 -d > ${DSH_HOME}/dsh-persona.txt`,
+      ],
+      45_000,
+    )
+  } catch {
+    // Best effort: a stopped session gets the file at its next start.
+  }
+}
+
 function stopTunnel() {
   if (tunnelPid) {
     try {
@@ -1006,6 +1031,17 @@ function personaPluginSource() {
   return `import { readFileSync } from 'node:fs'
 
 const PROFILE = '/content/dsh-home/profiles/web/cordis.patch.yml'
+const PERSONA_FILE = '/content/dsh-home/dsh-persona.txt'
+
+// Read on every prompt assembly so a panel save lands on the next turn
+// without restarting DSH. Falls back to the text baked in at start.
+function personaText(fallback) {
+  try {
+    return readFileSync(PERSONA_FILE, 'utf8')
+  } catch {
+    return fallback || ''
+  }
+}
 let healthCache = null
 let healthCacheAt = 0
 
@@ -1095,7 +1131,7 @@ export function apply(ctx, config) {
     ctx.systemPrompt.section({
       name: 'dsh:persona',
       order: 10201,
-      text: config.text,
+      text: () => personaText(config.text),
       interpolate: false,
     }),
     'dsh.persona',
@@ -1197,6 +1233,10 @@ ${personaPlugin}${imageMcp}- id: workspace-controller
     personaPluginSource(),
     'utf8',
   ).toString('base64')
+  const encodedPersonaText = Buffer.from(
+    personaSectionText(),
+    'utf8',
+  ).toString('base64')
   const publicFlags =
     PUBLIC_URL && PUBLIC_HOST
       ? `--public-url ${shellQuote(`${PUBLIC_URL}/`)} --trusted-host ${shellQuote(PUBLIC_HOST)}`
@@ -1215,6 +1255,7 @@ echo '${encodedPatch}' | base64 -d > "$DSH_HOME/minimax.patch.yml"
 echo '${encodedMcp}' | base64 -d > "$DSH_HOME/image-mcp.mjs"
 chmod 600 "$DSH_HOME/image-mcp.mjs"
 echo '${encodedPersona}' | base64 -d > "$DSH_HOME/dsh-persona.mjs"
+echo '${encodedPersonaText}' | base64 -d > "$DSH_HOME/dsh-persona.txt"
 chmod 600 "$DSH_HOME/dsh-persona.mjs"
 set -a
 . "$DSH_HOME/env.sh"
@@ -1770,6 +1811,9 @@ const server = http.createServer(async (req, res) => {
       if (typeof body.imageGeneration === 'boolean')
         config.imageGeneration = body.imageGeneration
       saveConfig()
+      // Identity changes are hot: the running agent reloads the persona file
+      // on its next prompt assembly.
+      void syncRemotePersona()
       return send(res, 200, await state())
     }
     return send(res, 404, { error: { message: 'not found' } })

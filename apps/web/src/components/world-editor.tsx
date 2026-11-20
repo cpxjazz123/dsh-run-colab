@@ -121,7 +121,7 @@ export function WorldEditor({
 				<div>
 					<h3 className="text-sm font-bold">世界观</h3>
 					<p className="text-xs text-muted-foreground">
-						分节填写世界，再为其中的人物各建一张卡；下次唤醒时写进系统提示。
+						分节填写世界，再为其中的人物各建一张卡；保存后立即注入系统提示，下一轮对话生效。
 					</p>
 				</div>
 				<Button

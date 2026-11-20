@@ -43,8 +43,9 @@ Browser ──▶ dsh-agent-web      apps/web          panel UI, /api/dsh proxy
   key, base URL, and model. The worldview has preset fields in the anify
   outline — name, one-line summary, era, geography, factions, rules, current
   arc — plus one character card per inhabitant (role, appearance, personality,
-  voice, ties, secret). It is rendered into the agent's system prompt on the
-  next start.
+  voice, ties, secret). The bridge writes it to `dsh-persona.txt` and the
+  persona plugin re-reads that file for every prompt assembly, so saving in the
+  panel takes effect on the next turn without restarting the agent.
 - **Snapshot cache** — uploads a Node 24 snapshot to Google Drive and restores
   it on later starts.
 - **Image generation** — a persistent `sdxl-turbo` worker on a separate GPU

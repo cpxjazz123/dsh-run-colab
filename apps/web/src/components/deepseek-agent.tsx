@@ -496,7 +496,7 @@ export function DeepSeekAgent() {
 								{saveIdentity.isPending ? '保存中…' : '保存人设'}
 							</Button>
 							<span className="text-xs text-muted-foreground">
-								下次唤醒时生效
+								保存后下一轮对话生效
 							</span>
 						</div>
 					</div>
