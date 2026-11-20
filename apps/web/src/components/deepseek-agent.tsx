@@ -309,7 +309,7 @@ export function DeepSeekAgent() {
 
 					<div className="flex items-center justify-between gap-3 rounded-2xl border-2 border-ink/10 bg-mist/70 px-4 py-2.5 text-left">
 						<div className="min-w-0">
-							<p className="text-sm font-bold">聊天时画图</p>
+							<p className="text-sm font-bold">会在聊天的时候生成图片</p>
 						</div>
 						<label className="relative inline-flex shrink-0 cursor-pointer items-center">
 							<input
@@ -322,7 +322,7 @@ export function DeepSeekAgent() {
 									setImageEnabled(enabled)
 									toggleImage.mutate(enabled)
 								}}
-								aria-label="聊天时画图"
+								aria-label="会在聊天的时候生成图片"
 							/>
 							<span
 								aria-hidden

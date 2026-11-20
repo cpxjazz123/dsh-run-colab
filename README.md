@@ -44,8 +44,8 @@ Browser ──▶ dsh-agent-web      apps/web          panel UI, /api/dsh proxy
   it on later starts.
 - **Image generation** — a persistent `sdxl-turbo` worker on a separate GPU
   session, exposed to the agent through MCP (`generate_image`). The panel's
-  **聊天时画图** switch decides whether the agent gets that tool at all; it is
-  persisted on the bridge and applied on the next start.
+  **会在聊天的时候生成图片** switch decides whether the agent gets that tool at
+  all; it is persisted on the bridge and applied on the next start.
 - **QQ Bot** — installs and reports the Tencent QQ Bot plugin state, including
   the login QR code.
 - **Public image URLs** — generated images are served at unguessable UUID
