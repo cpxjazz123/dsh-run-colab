@@ -25,7 +25,51 @@ const EMPTY_IDENTITY: DshIdentity = {
 	personality: '',
 	communicationStyle: '',
 	instructions: '',
+	worldview: '',
 }
+
+// Same outline as the anify world documents: era, geography, factions,
+// characters, rules, and the current arc.
+const WORLDVIEW_TEMPLATE = `# 六重界域
+
+一句话：混沌被源契推演成六重界域，能量从炼狱流向尘寰，暮蚀期开始失衡。
+
+## 纪元
+- 当前：第七天兆纪 · 暮蚀期
+- 纪年：天兆纪，以重大天兆划分纪元
+- 现状：天兆失准、裂隙增多、灵能水晶紧缺
+
+## 界域与地理
+- 阿斯忒曼圣庭（天顶界）：星轨谕言的发源地，圣枢院与灵算阁共掌权柄
+- 外域虚境：圣庭外围，炼狱外溢的能量在此沉淀成物质
+- 派尔洛炼狱：炎核巨人的熔核平原，世界的炉心
+- 岩衡古境：地魂守望者回收混乱能量，用地脉震动示警
+- 露米妮娅之森：晶灵把炽能调成灵能，剩余结晶为灵能水晶
+- 安索弥斯（尘寰界）：凡人的世界，观星殿读天兆，大公堡掌政权
+- 暮影秘境：影护者守在界域缝隙，隔绝混乱能量
+
+## 势力
+- 圣枢院 · 守序宗：圣谕唯尊，主张集权
+- 圣枢院 · 应机宗：应境而变，保留裁量
+- 通界司：掌管界域通孔与谕言传递
+- 虚寂：叛逃组织，私采异常水晶，寻找跨界的路
+
+## 人物
+- 琳恩·特尔：故事收集者，观察这个世界的记录者
+- 莉娅·希里尔：曦光晶愈屋医女
+- 星黛拉·奥罗莉亚：观星殿天语者候选
+- 芬恩·赫拉利亚：石洼落游侠，能看见影护者
+
+## 规则与禁忌
+- 谕言不可违抗，但可以被翻译
+- 灵能水晶是尘寰唯一可用的能量来源
+- 贵族囤积水晶，尘庶在暮蚀期挨冻
+- 观测者不得介入（琳恩正在违反这条）
+
+## 当前主线
+大肥鱼穿过界域通孔落到暮湾区，随身只有一根木勺；
+暮蚀期的裂隙在变多，影护者越来越累。
+`
 
 function errorMessage(body: unknown) {
 	if (typeof body !== 'object' || body === null) return null
@@ -464,6 +508,53 @@ export function DeepSeekAgent() {
 								disabled={busy}
 							/>
 						</Field>
+
+						<Field
+							label="世界观"
+							id="dsh-worldview"
+							hint="分节写清纪元、界域与地理、势力、人物、规则；下次唤醒时写进系统提示。留空则不注入。"
+						>
+							<Textarea
+								id="dsh-worldview"
+								value={identity.worldview}
+								onChange={(event) =>
+									setIdentity((current) => ({
+										...current,
+										worldview: event.target.value,
+									}))
+								}
+								rows={12}
+								maxLength={20000}
+								placeholder="# 世界名&#10;&#10;## 纪元&#10;## 界域与地理&#10;## 势力&#10;## 人物&#10;## 规则与禁忌&#10;## 当前主线"
+								className="font-mono text-[12.5px] leading-relaxed"
+								disabled={busy}
+							/>
+						</Field>
+						<div className="flex flex-wrap items-center justify-between gap-2">
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								disabled={busy}
+								onClick={() => {
+									if (
+										identity.worldview.trim() &&
+										!window.confirm('用模板覆盖当前世界观？')
+									)
+										return
+									setIdentity((current) => ({
+										...current,
+										worldview: WORLDVIEW_TEMPLATE,
+									}))
+								}}
+								className="rounded-full text-xs font-semibold"
+							>
+								载入六重界域模板
+							</Button>
+							<span className="text-xs text-muted-foreground">
+								{identity.worldview.length.toLocaleString()} / 20,000
+							</span>
+						</div>
 
 						<div className="flex flex-wrap items-center gap-3">
 							<Button

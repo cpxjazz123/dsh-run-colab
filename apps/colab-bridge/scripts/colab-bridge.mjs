@@ -47,6 +47,7 @@ const DEFAULT_IDENTITY = {
   personality: '',
   communicationStyle: '',
   instructions: '',
+  worldview: '',
 }
 const PROVIDER_ID = 'commandcode'
 const DSH_VERSION = '0.2.2-rc.1'
@@ -125,6 +126,7 @@ function normalizeIdentity(value) {
     personality: text('personality'),
     communicationStyle: text('communicationStyle'),
     instructions: text('instructions'),
+    worldview: text('worldview'),
   }
 }
 
@@ -135,6 +137,7 @@ function validateIdentity(identity) {
     personality: 2000,
     communicationStyle: 1000,
     instructions: 8000,
+    worldview: 20000,
   }
   for (const [key, limit] of Object.entries(limits)) {
     if (identity[key].length > limit)
@@ -853,6 +856,8 @@ function identityPrefix() {
   if (identity.personality) parts.push(`Personality:\n${identity.personality}`)
   if (identity.communicationStyle)
     parts.push(`Communication style:\n${identity.communicationStyle}`)
+  if (identity.worldview)
+    parts.push(`World setting:\n${identity.worldview}`)
   if (MCP_BRIDGE_URL) {
     parts.push(
       'When the user asks for an image, call the mcp__image__generate_image tool and include the returned image or link in your reply.',
@@ -875,6 +880,8 @@ function personaSectionText() {
   if (identity.personality) parts.push(`Personality:\n${identity.personality}`)
   if (identity.communicationStyle)
     parts.push(`Communication style:\n${identity.communicationStyle}`)
+  if (identity.worldview)
+    parts.push(`World setting:\n${identity.worldview}`)
   if (identity.instructions)
     parts.push(`Additional user configuration:\n${identity.instructions}`)
   return parts.join('\n\n')

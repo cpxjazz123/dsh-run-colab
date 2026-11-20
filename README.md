@@ -39,7 +39,10 @@ Browser ──▶ dsh-agent-web      apps/web          panel UI, /api/dsh proxy
 - **Agent control** — start/stop the Colab `dsh` session, inspect hardware and
   status, open the DSH Web UI.
 - **Identity and provider config** — agent name, persona, personality,
-  communication style, additional instructions, API key, base URL, and model.
+  communication style, additional instructions, a free-form worldview, API
+  key, base URL, and model. The worldview uses the same outline as the anify
+  world documents (era, geography, factions, characters, rules, current arc)
+  and is injected into the agent's system prompt on the next start.
 - **Snapshot cache** — uploads a Node 24 snapshot to Google Drive and restores
   it on later starts.
 - **Image generation** — a persistent `sdxl-turbo` worker on a separate GPU

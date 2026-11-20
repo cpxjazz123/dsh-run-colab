@@ -6,6 +6,9 @@ export const dshIdentitySchema = z.object({
   personality: z.string().max(2000),
   communicationStyle: z.string().max(1000),
   instructions: z.string().max(8000),
+  // Free-form world setting, written in the same outline style as the anify
+  // world documents: era, places, factions, characters, rules, main arc.
+  worldview: z.string().max(20000).default(""),
 });
 export type DshIdentity = z.infer<typeof dshIdentitySchema>;
 
@@ -33,6 +36,7 @@ export const dshStateSchema = z.object({
     personality: "",
     communicationStyle: "",
     instructions: "",
+    worldview: "",
   }),
   url: z.string().nullable(),
 });
