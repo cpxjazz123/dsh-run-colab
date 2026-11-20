@@ -154,3 +154,292 @@
 		animation: none !important;
 	}
 }
+
+/* ── 大肥鱼的异世界奇妙冒险 ─────────────────────────────────── */
+
+.adv {
+	--adv-ink: #27305c;
+	--adv-inkfaint: #8a8fb3;
+	--adv-cream: #f8f1e0;
+	--adv-soft: #c3cdee;
+	--adv-peri: #93abf2;
+	--adv-pink: #f4a9bb;
+	--adv-butter: #f6d57a;
+	--adv-mint: #9fd9c5;
+	--adv-kraft: #dcc7a0;
+	--adv-hand: 'Kaiti SC', STKaiti, KaiTi, 'LXGW WenKai', 'Noto Serif CJK SC', serif;
+	--adv-zig: polygon(
+		0 0,
+		100% 0,
+		calc(100% - 4px) 25%,
+		100% 50%,
+		calc(100% - 4px) 75%,
+		100% 100%,
+		0 100%,
+		4px 75%,
+		0 50%,
+		4px 25%
+	);
+	position: relative;
+	min-height: 100dvh;
+	color: var(--adv-cream);
+	background:
+		radial-gradient(900px 480px at 80% -120px, rgb(100 132 255 / 32%), transparent 70%),
+		radial-gradient(700px 440px at 6% 420px, rgb(70 120 240 / 16%), transparent 70%),
+		linear-gradient(180deg, #0e2060 0, #0a1746 620px, #081238 1500px);
+	overflow-x: hidden;
+}
+
+.adv::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	background-image:
+		radial-gradient(circle at 20% 30%, rgb(248 241 224 / 75%) 0 1px, transparent 1.6px),
+		radial-gradient(circle at 70% 60%, rgb(246 213 122 / 65%) 0 1.2px, transparent 1.9px),
+		radial-gradient(circle at 45% 85%, rgb(248 241 224 / 50%) 0 1px, transparent 1.5px);
+	background-size:
+		160px 160px,
+		220px 220px,
+		180px 180px;
+	animation: adv-twinkle 6s ease-in-out infinite alternate;
+}
+
+@keyframes adv-twinkle {
+	from {
+		opacity: 0.25;
+	}
+	to {
+		opacity: 0.6;
+	}
+}
+
+.adv-hand {
+	font-family: var(--adv-hand);
+}
+
+.adv-card {
+	position: relative;
+	color: var(--adv-ink);
+	background: var(--adv-cream);
+	border-radius: 12px 18px 14px 20px / 18px 12px 20px 14px;
+	box-shadow: 0 18px 30px -18px rgb(0 0 20 / 90%);
+}
+
+.adv-tape::before {
+	content: '';
+	position: absolute;
+	left: 50%;
+	top: -12px;
+	width: 104px;
+	height: 25px;
+	margin-left: -52px;
+	transform: rotate(-2.5deg);
+	background:
+		repeating-linear-gradient(
+			135deg,
+			rgb(255 255 255 / 40%) 0 5px,
+			transparent 5px 10px
+		),
+		var(--adv-tape, var(--adv-peri));
+	clip-path: var(--adv-zig);
+	opacity: 0.93;
+}
+
+.adv-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 11px 20px 13px;
+	font-family: var(--adv-hand);
+	font-size: 18px;
+	line-height: 1;
+	color: var(--adv-ink);
+	background: var(--adv-peri);
+	border: 2px solid var(--adv-ink);
+	border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
+	box-shadow: 3px 4px 0 rgb(3 8 30 / 50%);
+	transition:
+		transform 0.15s,
+		box-shadow 0.15s;
+}
+
+.adv-btn:hover {
+	transform: translate(-1px, -2px) rotate(-1.5deg);
+	box-shadow: 5px 7px 0 rgb(3 8 30 / 50%);
+}
+
+.adv-btn:active {
+	transform: translate(2px, 3px);
+	box-shadow: 1px 1px 0 rgb(3 8 30 / 50%);
+}
+
+.adv-btn-gold {
+	background: var(--adv-butter);
+}
+
+.adv-btn-paper {
+	background: var(--adv-cream);
+}
+
+.adv-k {
+	display: inline-block;
+	padding: 4px 13px;
+	font: 700 10.5px/1.5 var(--sans);
+	letter-spacing: 0.17em;
+	color: var(--adv-ink);
+	background:
+		repeating-linear-gradient(
+			135deg,
+			rgb(255 255 255 / 40%) 0 5px,
+			transparent 5px 10px
+		),
+		var(--adv-tape, var(--adv-butter));
+	clip-path: var(--adv-zig);
+	transform: rotate(-2deg);
+	white-space: nowrap;
+}
+
+.adv-fact {
+	position: relative;
+	padding: 7px 15px 8px 32px;
+	background: var(--adv-kraft);
+	border-radius: 6px 13px 13px 6px;
+	box-shadow: 2px 3px 0 rgb(3 8 30 / 30%);
+}
+
+.adv-fact:nth-child(odd) {
+	transform: rotate(-1.5deg);
+}
+
+.adv-fact:nth-child(even) {
+	transform: rotate(1.2deg);
+}
+
+.adv-fact::before {
+	content: '';
+	position: absolute;
+	left: 11px;
+	top: 50%;
+	width: 11px;
+	height: 11px;
+	margin-top: -5.5px;
+	border-radius: 50%;
+	background: var(--adv-cream);
+	box-shadow: inset 1px 1px 0 rgb(0 0 0 / 40%);
+}
+
+.adv-title {
+	display: inline;
+	padding: 0 8px;
+	font-family: var(--adv-hand);
+	font-size: clamp(40px, 7vw, 76px);
+	line-height: 1.25;
+	color: var(--adv-ink);
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+	background: linear-gradient(
+		transparent 62%,
+		rgb(246 213 122 / 95%) 62% 90%,
+		transparent 90%
+	);
+}
+
+.adv-swim {
+	position: absolute;
+	left: 0;
+	animation: adv-swim linear infinite;
+}
+
+@keyframes adv-swim {
+	from {
+		transform: translateX(-140px);
+	}
+	to {
+		transform: translateX(calc(100vw + 40px));
+	}
+}
+
+.adv-swim-l {
+	animation-name: adv-swim-l;
+}
+
+@keyframes adv-swim-l {
+	from {
+		transform: translateX(calc(100vw + 40px));
+	}
+	to {
+		transform: translateX(-140px);
+	}
+}
+
+.adv-wob {
+	animation: adv-wob 3.2s ease-in-out infinite;
+}
+
+@keyframes adv-wob {
+	50% {
+		transform: translateY(7px) rotate(2deg);
+	}
+}
+
+.adv-kelp {
+	transform-origin: 50% 100%;
+	animation: adv-sway 6s ease-in-out infinite alternate;
+}
+
+@keyframes adv-sway {
+	from {
+		transform: rotate(-4deg);
+	}
+	to {
+		transform: rotate(4deg);
+	}
+}
+
+.adv-prose p + p {
+	margin-top: 0.9em;
+}
+
+.adv-prose p:first-of-type::first-letter {
+	float: left;
+	margin: 0.08em 0.12em 0 0;
+	font-family: var(--adv-hand);
+	font-size: 2.6em;
+	line-height: 0.9;
+	color: #b03a34;
+}
+
+.adv-die {
+	transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.adv-die-rolling {
+	animation: adv-roll 0.6s ease-in-out;
+}
+
+@keyframes adv-roll {
+	0% {
+		transform: rotate(0) scale(1);
+	}
+	35% {
+		transform: rotate(-24deg) scale(1.08);
+	}
+	70% {
+		transform: rotate(18deg) scale(0.96);
+	}
+	100% {
+		transform: rotate(0) scale(1);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.adv::before,
+	.adv-swim,
+	.adv-wob,
+	.adv-kelp {
+		animation: none !important;
+	}
+}

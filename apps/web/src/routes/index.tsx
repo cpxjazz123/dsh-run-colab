@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { DeepSeekAgent } from '#/components/deepseek-agent'
 
 export const Route = createFileRoute('/')({
@@ -17,6 +17,14 @@ function AgentPage() {
 				</h1>
 			</header>
 			<DeepSeekAgent />
+			<p className="text-center text-xs">
+				<Link
+					to="/adventure"
+					className="font-semibold text-whale underline decoration-dotted underline-offset-4 hover:text-whale-deep"
+				>
+					大肥鱼的异世界奇妙冒险 →
+				</Link>
+			</p>
 			<p className="text-center text-xs text-muted-foreground">
 				Cloudflare Workers · Google Colab · 云端的大肥鱼
 			</p>
