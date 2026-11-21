@@ -6,6 +6,7 @@ dist/
 dist-ssr/
 *.local
 *.log
+.env
 .dev.vars
 .dev.vars.*
 !.dev.vars.example
