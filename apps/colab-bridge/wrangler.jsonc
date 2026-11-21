@@ -14,7 +14,10 @@
 	"vars": {
 		// Set this to the public origin of the dsh-agent-api Worker so the DSH
 		// Web UI and generated image links use the origin the browser reached.
-		"DSH_PUBLIC_URL": ""
+		"DSH_PUBLIC_URL": "",
+		// Quota project for the Drive API calls (runtime snapshot + DSH home
+		// archive). Set it to the project where drive.googleapis.com is enabled.
+		"GOOGLE_CLOUD_PROJECT": "uxpilot-clone"
 	},
 	"secrets": {
 		"required": [

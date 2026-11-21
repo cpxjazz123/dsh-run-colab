@@ -68,6 +68,13 @@ export const dshStateSchema = z.object({
   installed: z.boolean(),
   snapshot: z.boolean(),
   drive: z.boolean(),
+  // The Drive archive of the DSH home: sessions, profiles and memories.
+  history: z
+    .object({
+      fileId: z.string().nullable(),
+      savedAt: z.number().nullable(),
+    })
+    .default({ fileId: null, savedAt: null }),
   running: z.boolean(),
   hasKey: z.boolean(),
   baseUrl: z.string(),

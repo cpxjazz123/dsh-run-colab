@@ -18,6 +18,7 @@ RUN apt-get update \
         git \
         openssh-client \
         python3 \
+        python3-keyring \
         python3-pip \
         python3-venv \
         xz-utils \

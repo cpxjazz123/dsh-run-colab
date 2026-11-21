@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import {
 	ChevronDown,
 	ExternalLink,
+	HardDriveDownload,
 	Loader2,
 	Play,
 	RefreshCw,
@@ -28,6 +29,15 @@ const EMPTY_IDENTITY: DshIdentity = {
 	instructions: '',
 	world: EMPTY_WORLD,
 	characters: [],
+}
+
+function formatSavedAt(at: number) {
+	const minutes = Math.max(0, Math.round((Date.now() - at) / 60_000))
+	if (minutes < 1) return '刚存好'
+	if (minutes < 60) return `${minutes} 分钟前存的`
+	const hours = Math.round(minutes / 60)
+	if (hours < 24) return `${hours} 小时前存的`
+	return `${Math.round(hours / 24)} 天前存的`
 }
 
 function errorMessage(body: unknown) {
@@ -267,6 +277,15 @@ export function DeepSeekAgent() {
 								<span className={cn('size-1.5 rounded-full', pill.dot)} />
 								{pill.text}
 							</span>
+							{data?.history.savedAt ? (
+								<span
+									title="会话和记忆存在 Google Drive，睡着也不会忘"
+									className="inline-flex items-center gap-1.5 rounded-full bg-ink/5 px-3 py-1 text-xs font-bold text-muted-foreground"
+								>
+									<HardDriveDownload className="size-3.5" />
+									{formatSavedAt(data.history.savedAt)}
+								</span>
+							) : null}
 						</div>
 					</div>
 

@@ -199,6 +199,21 @@ pnpm --filter @dsh-agent/web run deploy
 The Google OAuth client for the deployed host needs the redirect URI
 `https://<panel-worker>/api/auth/google/callback`.
 
+## History in Google Drive
+
+The Colab VM is disposable, but the agent is not. The bridge archives the whole
+DSH home — sessions, profiles, memories, without `node_modules` — and keeps it
+in the user's own Drive:
+
+- `dsh-agent-node24.tar.gz` — the DSH runtime snapshot
+- `dsh-home-history.tar.gz` — the DSH home (`/content/dsh-home`)
+
+Uploads are debounced on every config save, forced before `POST /stop` and
+before the Colab session is closed, so a live conversation survives a Colab
+timeout. `POST /start` downloads the archive onto the VM and unpacks it before
+DSH boots, so the previous sessions reopen. The token only carries `drive.file`,
+so the bridge sees just the files it created.
+
 ## Security
 
 This is a **single-tenant** stack. One container owns one Colab session and

@@ -64,6 +64,10 @@ const CACHE_DIR = join(homedir(), '.cache', 'dsh-agent')
 const CACHE_FILE = join(CACHE_DIR, 'dsh-node24.tar.gz')
 const REMOTE_SNAPSHOT = '/content/dsh-node24.tar.gz'
 const DRIVE_FILE_NAME = 'dsh-agent-node24.tar.gz'
+// Full DSH home (sessions, profiles, memories). Sleep uploads it, wake
+// restores it, so the agent keeps every conversation across Colab sessions.
+const DRIVE_HISTORY_NAME = 'dsh-home-history.tar.gz'
+const HISTORY_TMP = '/tmp/dsh-home-history.tar.gz'
 const OAUTH_TOKEN_FILE = join(CONFIG_DIR, 'oauth-token.json')
 const GOOGLE_CLOUD_PROJECT = (process.env.GOOGLE_CLOUD_PROJECT || '').trim()
 const ENV_API_KEY = (process.env.DEEPSEEK_API_KEY || '').trim()
@@ -705,17 +709,25 @@ async function qqbotState() {
   return { ...effective, health }
 }
 
+// The runtime accepts one `colab ssh` at a time. When the web tunnel holds it,
+// retry briefly after dropping our own tunnel; a competing bridge still wins.
 function sshExec(script, input) {
-  const result = colabRun(
-    ['ssh', '-s', SESSION, '--', 'bash', '-lc', script],
-    900_000,
-    input,
-  )
-  const output = `${result.stdout || ''}${result.stderr || ''}`.trim()
-  if (result.status !== 0) {
-    throw new Error(`Remote command failed: ${output.slice(-1200)}`)
+  let output = ''
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const result = colabRun(
+      ['ssh', '-s', SESSION, '--', 'bash', '-lc', script],
+      900_000,
+      input,
+    )
+    output = `${result.stdout || ''}${result.stderr || ''}`.trim()
+    if (result.status === 0) return output
+    if (attempt === 0 && output.includes('Already-active SSH session')) stopTunnel()
+    else if (attempt < 2 && output.includes('Already-active SSH session'))
+      colabRun(['ssh', '-s', SESSION, '--', 'true'], 30_000)
+    else break
+    spawnSync('sleep', [String(3 * (attempt + 1))])
   }
-  return output
+  throw new Error(`Remote command failed: ${output.slice(-1200)}`)
 }
 
 // Push the current identity to the VM so a running DSH picks it up on the next
@@ -1397,6 +1409,7 @@ async function state() {
     installed: config.installed,
     snapshot: existsSync(CACHE_FILE),
     drive: !!config.driveFileId,
+    history: await historyState(),
     running,
     hasKey: !!config.apiKey,
     baseUrl: config.baseUrl,
@@ -1498,6 +1511,82 @@ async function driveFind(token) {
   config.driveFileId = file.id
   saveConfig()
   return file.id
+}
+
+/** Find (or create) one Drive file by name in the user's own Drive. */
+async function driveFindByName(token, name, folderId = '') {
+  const query = encodeURIComponent(
+    `name = '${name}' and trashed = false${
+      folderId ? ` and '${folderId}' in parents` : ''
+    }`,
+  )
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${query}&spaces=drive&fields=files(id,name,size,modifiedTime)`,
+    { headers: driveHeaders(token) },
+  )
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(`Drive lookup failed (${response.status})`)
+  return data.files?.[0] ?? null
+}
+
+async function drivePutFile(token, name, buffer) {
+  const existing = await driveFindByName(token, name)
+  const url = existing
+    ? `https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=resumable&fields=id,name,size,modifiedTime`
+    : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,size,modifiedTime'
+  const initiated = await fetch(url, {
+    method: existing ? 'PATCH' : 'POST',
+    headers: {
+      ...driveHeaders(token),
+      'content-type': 'application/json; charset=UTF-8',
+      'x-upload-content-type': 'application/gzip',
+      'x-upload-content-length': String(buffer.length),
+    },
+    body: JSON.stringify(existing ? {} : { name }),
+  })
+  if (!initiated.ok)
+    throw new Error(`Drive upload init failed (${initiated.status})`)
+  const location = initiated.headers.get('location')
+  if (!location) throw new Error('Drive upload did not return a session URL')
+  const chunkSize = 8 * 1024 * 1024
+  let offset = 0
+  let uploaded = null
+  while (offset < buffer.length) {
+    const end = Math.min(offset + chunkSize, buffer.length)
+    const response = await fetch(location, {
+      method: 'PUT',
+      headers: {
+        'content-range': `bytes ${offset}-${end - 1}/${buffer.length}`,
+        'content-length': String(end - offset),
+      },
+      body: buffer.subarray(offset, end),
+    })
+    if (response.status !== 308) {
+      if (!response.ok)
+        throw new Error(`Drive chunk upload failed (${response.status})`)
+      uploaded = await response.json().catch(() => null)
+    }
+    offset = end
+  }
+  return uploaded ?? existing
+}
+
+// The VM downloads straight from Drive with a short-lived header file, so the
+// archive never passes through the Cloudflare container.
+function restoreHistoryOnVm(id, token) {
+  const headers = '/content/.drive-history-headers'
+  const lines = [`Authorization: Bearer ${token}`]
+  if (GOOGLE_CLOUD_PROJECT) lines.push(`x-goog-user-project: ${GOOGLE_CLOUD_PROJECT}`)
+  sshExec(`umask 077; cat > ${headers}`, `${lines.join('\n')}\n`)
+  return sshExec(`set -euo pipefail
+trap 'rm -f ${headers}' EXIT
+mkdir -p /content/dsh-home
+tmp=$(mktemp /tmp/dsh-history.XXXXXX.tar.gz)
+curl --fail --location --silent --show-error -H @${headers} \
+  "https://www.googleapis.com/drive/v3/files/${id}?alt=media" -o "$tmp"
+tar -xzf "$tmp" -C /content
+rm -f "$tmp"
+echo RESTORED`)
 }
 
 async function driveUpload() {
@@ -1690,6 +1779,10 @@ async function start() {
   stopTunnel()
   ensureSession()
   invalidateStatus()
+  // Put the saved home back before DSH boots, so the old sessions reopen.
+  const history = await restoreHistory()
+  if (!history.ok && history.reason !== 'no archive')
+    console.error('history restore skipped:', history.error ?? history.reason)
   let output = await waitForRemoteDsh(3000)
   let restored = ''
   if (!output.includes(DSH_VERSION)) {
@@ -1720,6 +1813,8 @@ async function start() {
 }
 
 async function stop() {
+  // Keep the conversations: archive before the web server goes away.
+  await scheduleHistoryUpload('stop')
   stopTunnel()
   invalidateStatus()
   let output = ''
@@ -1734,6 +1829,7 @@ async function stop() {
 }
 
 async function stopSession() {
+  await scheduleHistoryUpload('session-stop')
   stopTunnel()
   const result = colabRun(['stop', '-s', SESSION], 120_000)
   invalidateStatus()
@@ -1778,6 +1874,87 @@ function send(res, status, body) {
     'cache-control': 'no-store',
   })
   res.end(payload)
+}
+
+// Ask the VM to pack the whole DSH home (sessions, profiles, memories) and
+// stream it back; node and caches are reinstallable and stay out.
+function archiveDshHome() {
+  const base64 = sshExec(
+    `rm -f ${HISTORY_TMP}; tar -czf ${HISTORY_TMP} ` +
+      `--exclude='dsh-home/profiles/web/node_modules' ` +
+      `--exclude='*/node_modules' --exclude='*/node_modules/*' ` +
+      `--exclude='*/.cache' --exclude='*/cache' ` +
+      `-C /content dsh-home && base64 -w0 ${HISTORY_TMP} && rm -f ${HISTORY_TMP}`,
+  )
+  return Buffer.from(base64, 'base64')
+}
+
+let historyUpload = null
+let historyUploadAt = 0
+
+/** Debounced upload of the archive to Drive during a running session. */
+function scheduleHistoryUpload(reason) {
+  if (historyUpload) return
+  historyUpload = new Promise(async (resolve) => {
+    try {
+      const session = await colabStatusCached()
+      if (!session.found) return resolve({ ok: false, reason: 'no session' })
+      const bytes = archiveDshHome()
+      const token = await driveAccessToken()
+      const file = await drivePutFile(token, DRIVE_HISTORY_NAME, bytes)
+      historyUploadAt = Date.now()
+      config.historyFileId = file?.id || ''
+      saveConfig()
+      historyMeta = {
+        fileId: file?.id ?? null,
+        savedAt: file?.modifiedTime ? Date.parse(file.modifiedTime) : Date.now(),
+      }
+      console.log(`history uploaded (${reason}): ${bytes.length} bytes`)
+      resolve({ ok: true, bytes: bytes.length, id: file?.id })
+    } catch (error) {
+      console.error(`history upload failed (${reason}):`, error instanceof Error ? error.message : error)
+      resolve({ ok: false, error: error instanceof Error ? error.message : String(error) })
+    } finally {
+      historyUpload = null
+    }
+  })
+  return historyUpload
+}
+
+/** Download the archive onto the VM before DSH starts. */
+// Cheap Drive lookup so the panel can show when the last archive was saved,
+// including one made by a previous container.
+let historyMeta = { fileId: null, savedAt: null }
+async function historyState() {
+  try {
+    const token = await driveAccessToken()
+    const file = await driveFindByName(token, DRIVE_HISTORY_NAME)
+    historyMeta = {
+      fileId: file?.id ?? null,
+      savedAt: file?.modifiedTime ? Date.parse(file.modifiedTime) : null,
+    }
+  } catch {
+    // keep the last known value when Drive is unreachable
+  }
+  return historyMeta
+}
+
+async function restoreHistory() {
+  try {
+    const token = await driveAccessToken()
+    const file = await driveFindByName(token, DRIVE_HISTORY_NAME)
+    if (!file) return { ok: false, reason: 'no archive' }
+    restoreHistoryOnVm(file.id, token)
+    config.historyFileId = file.id
+    saveConfig()
+    historyMeta = {
+      fileId: file.id,
+      savedAt: file.modifiedTime ? Date.parse(file.modifiedTime) : null,
+    }
+    return { ok: true, id: file.id, modifiedTime: file.modifiedTime ?? null }
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) }
+  }
 }
 
 const server = http.createServer(async (req, res) => {
@@ -1921,6 +2098,9 @@ const server = http.createServer(async (req, res) => {
       // Identity changes are hot: the running agent reloads the persona file
       // on its next prompt assembly.
       void syncRemotePersona()
+      // Keep a recent archive in Drive while the session is alive, so a
+      // Colab timeout does not lose the conversation.
+      void scheduleHistoryUpload('config')
       return send(res, 200, await state())
     }
     return send(res, 404, { error: { message: 'not found' } })
